@@ -26,9 +26,6 @@ Ex: varnames = "DBZ" -- Single var
 Ex: varnames = ["x","y","altitude","DBZ"] -- Array of vars
 ==============================================================================#
 
-using NetCDF
-using DataStructures
-
 function read_ncvars(ncfile::AbstractString,varnames::Array,mask_opt::Bool=true,
                      dict_opt::Bool=false)
     # Determine if one or more vars needs to be read in

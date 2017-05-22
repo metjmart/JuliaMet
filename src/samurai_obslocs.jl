@@ -25,9 +25,6 @@ of the data types (e.g. obs, inverse_error, etc.). The function will output
 the dictionary and automatically create specified figures.
 ==============================================================================#
  
-using PyPlot
-plt=PyPlot
-
 function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
                      month::AbstractString,day::AbstractString,rmax,zmax,
                      data_out=false,plots_out=false)

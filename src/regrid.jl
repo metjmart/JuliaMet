@@ -14,9 +14,6 @@
 # regrid_xyz2rtz
 # *****************************************************************************
 
-# Load the Grid package
-using Grid
-
 #==============================================================================
 # grid_2d
 
@@ -89,8 +86,8 @@ function regrid_xy2rt{T<:Real}(x::Vector{T},y::Vector{T},vardata::Array{T,2},
     rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
     r = collect(0:(x[2]-x[1]):rmax)
     theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
-    if theta_inc<1
-        theta_inc=1
+    if theta_inc<1.0
+        theta_inc=1.0
     end
     # Define theta
     theta = collect(0:theta_inc:360-theta_inc)

@@ -5,15 +5,11 @@
 # Email: jon.martinez@colostate.edu
 # Julia version: 0.4.5
 #
-# -- Adapted from Annette Foerster --
+# -- Adapted/updated from a previous version by Annette Foerster --
 #
 # Several functions designed to work with color bars in Julia. To create a 
 # colorbar manually, see the method introduced at the end.
 # *****************************************************************************
-
-import Colors
-import PyPlot
-plt = PyPlot
 
 function create_colormap(colorCodes::Array,mapname)
     dim1 = length(colorCodes)
