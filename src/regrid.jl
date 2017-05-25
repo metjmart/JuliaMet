@@ -22,7 +22,7 @@ dimensional grid from the one-dimensional input coordinate arrays.
 ** x and y do not have to be the same size.
 ==============================================================================#
 
-function grid_2d{T<:Real}(x::Vector{T},y::Vector{T})
+function grid_2d{Ta<:Real,Tb<:Real}(x::Vector{Ta},y::Vector{Tb})
     # Create new arrays
     x_2d = Array(Float64,length(x),length(y))
     y_2d = Array(Float64,length(x),length(y))
@@ -45,7 +45,8 @@ end
 ** x, y, and z do not have to be the same size.
 ==============================================================================#
 
-function grid_3d{T<:Real}(x::Vector{T},y::Vector{T},z::Vector{T})
+function grid_3d{Ta<:Real,Tb<:Real,Tc<:Real}(x::Vector{Ta},y::Vector{Tb},
+                                             z::Vector{Tc})
     # Create new arrays
     x_3d = Array(Float64,length(x),length(y),length(z))
     y_3d = Array(Float64,length(x),length(y),length(z))
@@ -80,25 +81,26 @@ by working around issues with fill values when interpolating the data.
 rt_out - Option to output r and theta arrays, default is false.
 ==============================================================================#
 
-function regrid_xy2rt{T<:Real}(x::Vector{T},y::Vector{T},vardata::Array{T,2},
-                               rt_out::Bool=false)
-    # Determine the radius of the polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    r = collect(0:(x[2]-x[1]):rmax)
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+function regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::Vector{Ta},y::Vector{Tb},
+                                                  vardata::Array{Tc,2},
+                                                  rt_out::Bool=false)
+    # Determine the max radius of polar coordinate grid and the theta increment
+    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
+          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
-    # Define theta
+    # Define r and theta
+    r = collect(0:(x[2]-x[1]):rmax)
     theta = collect(0:theta_inc:360-theta_inc)
     # Create two-dimensional arrays for r and theta components of the polar grid
-    r_2d,theta_2d = grid_2d(r,theta)
     # Define the Cartesian points in terms of the 2-d polar coordinates
-    x_polar = r_2d .* cos(deg2rad(theta_2d))
-    y_polar = r_2d .* sin(deg2rad(theta_2d))
+    local r_2d,theta_2d = grid_2d(r,theta),
+          x_polar = r_2d .* cos(deg2rad(theta_2d)),
+          y_polar = r_2d .* sin(deg2rad(theta_2d))
     # Specify the x and y range of the data
-    x_range = x[1]:(x[2]-x[1]):x[end]
-    y_range = y[1]:(y[2]-y[1]):y[end]
+    local x_range = x[1]:(x[2]-x[1]):x[end],
+          y_range = y[1]:(y[2]-y[1]):y[end]
     # Interpolate the data from the Cartesian grid to the polar grid 
     field_rt = Array(Float64,size(x_polar))
     field_interp = CoordInterpGrid((x_range,y_range), vardata, BCnan, InterpLinear);
@@ -124,16 +126,20 @@ coordinate grid by executing regrid_xy2rt at each vertical level.
 rt_out - Option to output r and theta arrays, default is false.
 ==============================================================================#
 
-function regrid_xyz2rtz{T<:Real}(x::Vector{T},y::Vector{T},z::Vector{T},
-                                 vardata::Array{T,3},rt_out::Bool=false)
-    # Determine the radius of the polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    r = collect(0:(x[2]-x[1]):rmax)
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
-    if theta_inc<1
-        theta_inc=1
+function regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
+                        x::Vector{Ta},
+                        y::Vector{Tb},
+                        z::Vector{Tc},
+                        vardata::Array{Td,3},
+                        rt_out::Bool=false)
+    # Determine the max radius of polar coordinate grid and the theta increment
+    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
+          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    if theta_inc<1.0
+        theta_inc=1.0
     end
-    # Define theta
+    # Define r and theta
+    r = collect(0:(x[2]-x[1]):rmax)
     theta = collect(0:theta_inc:360-theta_inc)
    # Define the dimensions of the new var
     field_rtz = Array(Float64,length(r),length(theta),length(z))

@@ -25,10 +25,12 @@ differencing. The function requires the input (z) to have units of meters.
 *** Assumes the vertical dimension is the third dimension in the input array!
 ==============================================================================#
 
-function finite_dz{T<:Real}(z::Vector{T},field::Array{T,3})
+function finite_dz{Ta<:Real,Tb<:Real}(z::AbstractVector{Ta},
+                                      field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    d1,d2,d3 = size(field)
-    dvardz = Array(Float64,size(field)) .* NaN
+    local d1,d2,d3 = size(field)
+    dvardz = similar(field,Float64)
+    fill!(dvardz, NaN)
     # Loop over all dimensions to compute the vertical derivative
     for k in collect(1:d3)
         for j in collect(1:d2)
@@ -58,10 +60,12 @@ differencing. The function requires the input (r) to have units of meters.
 *** Assumes the radial dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dr{T<:Real}(r::Vector{T},field::Array{T,3})
+function finite_dr{Ta<:Real,Tb<:Real}(r::AbstractVector{Ta},
+                                      field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    d1,d2,d3 = size(field)
-    dvardr = Array(Float64,size(field)) .* NaN;
+    local d1,d2,d3 = size(field)
+    dvardr = similar(field,Float64)
+    fill!(dvardr, NaN)
     # Loop over all dimensions to compute the radial derivative
     for i in collect(1:d1)
         for j in collect(1:d2)
@@ -91,10 +95,12 @@ differencing. The function requires the input (x) to have unites of meters.
 *** Assumes the x-dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dx{T<:Real}(x::Vector{T},field::Array{T,3})
+function finite_dx{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
+                                      field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    d1,d2,d3 = size(field)
-    dvardx = Array(Float64,size(field)) .* NaN;
+    local d1,d2,d3 = size(field)
+    dvardx = similar(field,Float64)
+    fill!(dvardx, NaN)
     # Loop over all dimensions to compute the radial derivative
     for i in collect(1:d1)
         for j in collect(1:d2)
@@ -124,10 +130,12 @@ differencing. The function requires the input (y) to have units of meters.
 *** Assumes the y-dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dy{T<:Real}(y::Vector{T},field::Array{T,3})
+function finite_dy{Ta<:Real,Tb<:Real}(y::AbstractVector{Ta},
+                                      field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    d1,d2,d3 = size(field)
-    dvardy = Array(Float64,size(field)) .* NaN;
+    local d1,d2,d3 = size(field)
+    dvardy = similar(field,Float64)
+    fill!(dvardy, NaN)
     # Loop over all dimensions to compute the radial derivative
     for i in collect(1:d1)
         for j in collect(1:d2)

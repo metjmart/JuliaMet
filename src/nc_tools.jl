@@ -24,10 +24,14 @@ Format for function use:
 Define varnames as a string or an array of strings.
 Ex: varnames = "DBZ" -- Single var
 Ex: varnames = ["x","y","altitude","DBZ"] -- Array of vars
+
+mask_opt - specify whether missval or fillval should be replaced with NaN - 
+           default is true
+dict_opt - specify if output type should be a dictionary - defualt is false
 ==============================================================================#
 
-function read_ncvars(ncfile::AbstractString,varnames::Array,mask_opt::Bool=true,
-                     dict_opt::Bool=false)
+function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
+                     mask_opt::Bool=true,dict_opt::Bool=false)
     # Determine if one or more vars needs to be read in
     # If one var, type is string
     if typeof(varnames) <: AbstractString
@@ -134,7 +138,7 @@ function read_ncvars(ncfile::AbstractString,varnames::Array,mask_opt::Bool=true,
             return collect(values(svarsdata))
         end
     else  
-       println("Failed to read in var(s), be sure to define them as a string or an array of strings!")
+       error("Failed to read in var(s), be sure to define them as a string or an array of strings!")
     end 
 end    
 
