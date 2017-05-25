@@ -10,12 +10,12 @@ Julia version: 0.4.5, 0.5.2
 
 The following packages should be installed prior to using JuliaMet:
 
-* [https://github.com/JuliaGeo/NetCDF.jl](NetCDF)
-* [https://github.com/JuliaCollections/DataStructures.jl](DataStructures)
-* [https://github.com/timholy/Grid.jl](Grid)
-* [https://github.com/JuliaMath/Interpolations.jl](Interpolations)
-* [https://github.com/JuliaGraphics/Colors.jl](Colors)
-* [https://github.com/JuliaPy/PyPlot.jl](PyPlot)
+* [NetCDF](https://github.com/JuliaGeo/NetCDF.jl)
+* [DataStructures](https://github.com/JuliaCollections/DataStructures.jl)
+* [Grid](https://github.com/timholy/Grid.jl)
+* [Interpolations](https://github.com/JuliaMath/Interpolations.jl)
+* [Colors](https://github.com/JuliaGraphics/Colors.jl)
+* [PyPlot](https://github.com/JuliaPy/PyPlot.jl)
 
 This can be accomplished by opening the Julia REPL and running
 ```
