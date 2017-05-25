@@ -6,6 +6,23 @@ Functions developed to analyze gridded meteorological data and model output.
 
 Julia version: 0.4.5, 0.5.2 
 
+## Package dependencies 
+
+The following packages should be installed prior to using JuliaMet:
+
+* [https://github.com/JuliaGeo/NetCDF.jl](NetCDF)
+* [https://github.com/JuliaCollections/DataStructures.jl](DataStructures)
+* [https://github.com/timholy/Grid.jl](Grid)
+* [https://github.com/JuliaMath/Interpolations.jl](Interpolations)
+* [https://github.com/JuliaGraphics/Colors.jl](Colors)
+* [https://github.com/JuliaPy/PyPlot.jl](PyPlot)
+
+This can be accomplished by opening the Julia REPL and running
+```
+Pkg.add("Package")
+```
+where "Package" is replaced by the package names listed above.
+
 ## Installation
 
 Begin by using `git clone` to clone the repository to a local directory:
@@ -17,7 +34,7 @@ Since JuliaMet is not an official Julia package, it won't be located in
 Julia's `LOAD_PATH`. Therefore, we have to manually extend `LOAD_PATH` to 
 include the location of JuliaMet. There are a couple ways to do this. 
 First, it can be extended by adding the following to the `~/.juliarc.jl` file 
-(see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/))
+(see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/)):
 ```
 push!(LOAD_PATH, "/path/to/JuliaMet/")
 ```
