@@ -28,7 +28,7 @@ The function requires the input (r) to have units of meters.
 function finite_dr{Ta<:Real,Tb<:Real}(r::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    local d1,d2,d3 = size(field)
+    d1,d2,d3 = size(field)
     dvardr = similar(field,Float64)
     fill!(dvardr, NaN)
     # Loop over all dimensions to compute the radial derivative
@@ -63,7 +63,7 @@ The function requires the input (x) to have units of meters.
 function finite_dx{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    local d1,d2,d3 = size(field)
+    d1,d2,d3 = size(field)
     dvardx = similar(field,Float64)
     fill!(dvardx, NaN)
     # Loop over all dimensions to compute the x-derivative
@@ -75,7 +75,7 @@ function finite_dx{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
                     dvardx[i,j,k] = (-3.0*field[i+1,j,k] + 4.0*field[i+1,j,k] - field[i+2,j,k])/(x[i+2]-x[i])
                 # Reverse difference at outermost boundary
                 elseif i==d1
-                    dvardx[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i-1,j,k] + field[i+2,j,k])/(x[i]-x[i-2])
+                    dvardx[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i-1,j,k] + field[i-2,j,k])/(x[i]-x[i-2])
                 # Centered difference at all other grid points
                 else
                     dvardx[i,j,k] = (field[i+1,j,k]-field[i-1,j,k])/(x[i+1]-x[i-1])
@@ -98,7 +98,7 @@ The function requires the input (y) to have units of meters.
 function finite_dy{Ta<:Real,Tb<:Real}(y::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    local d1,d2,d3 = size(field)
+    d1,d2,d3 = size(field)
     dvardy = similar(field,Float64)
     fill!(dvardy, NaN)
     # Loop over all dimensions to compute the y-derivative
@@ -133,11 +133,11 @@ The function requires the input (z) to have units of meters.
 function finite_dz{Ta<:Real,Tb<:Real}(z::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
-    local d1,d2,d3 = size(field)
+    d1,d2,d3 = size(field)
     dvardz = similar(field,Float64)
     fill!(dvardz, NaN)
     # Loop over all dimensions to compute the vertical derivative
-    for k 1:d3
+    for k in 1:d3
         for j in 1:d2
             for i in 1:d1
                 # Forward difference at lower boundary
@@ -172,15 +172,17 @@ function finite_laplacian{Ta<:Real,Tb<:Real,Tc<:Real}(
                           y::AbstractVector{Tb},
                           field::AbstractArray{Tc,3})
     # Define the dimensions of the input variable
-    local d1,d2,d3 = size(field), h = (x[2]-x[1])^2
+    d1,d2,d3 = size(field) 
+    hx = (x[2]-x[1])^2
+    hy = (y[2]-y[1])^2
     out = similar(field,Float64)
     fill!(out, NaN)
     # Loop over all dimensions to compute the Laplacian
-    for k 1:d3
+    for k in 1:d3
         for j in 2:d2-1
             for i in 2:d1-1
-               out[i,j,k] = (field[i+1,j,k] + field[i-1,j,k] + field[i,j+1,k] + 
-                             field[i,j-1,k] - 4.0*field[i,j,k])/h
+               out[i,j,k] = (field[i+1,j,k] + field[i-1,j,k])/hx + 
+                            (field[i,j+1,k] + field[i,j-1,k])/hy 
             end
         end
     end
