@@ -85,8 +85,8 @@ function regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::Vector{Ta},y::Vector{Tb},
                                                   vardata::Array{Tc,2},
                                                   rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
-          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
+    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
@@ -95,12 +95,12 @@ function regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::Vector{Ta},y::Vector{Tb},
     theta = collect(0:theta_inc:360-theta_inc)
     # Create two-dimensional arrays for r and theta components of the polar grid
     # Define the Cartesian points in terms of the 2-d polar coordinates
-    local r_2d,theta_2d = grid_2d(r,theta),
-          x_polar = r_2d .* cos(deg2rad(theta_2d)),
-          y_polar = r_2d .* sin(deg2rad(theta_2d))
+    r_2d,theta_2d = grid_2d(r,theta)
+    x_polar = r_2d .* cos(deg2rad(theta_2d))
+    y_polar = r_2d .* sin(deg2rad(theta_2d))
     # Specify the x and y range of the data
-    local x_range = x[1]:(x[2]-x[1]):x[end],
-          y_range = y[1]:(y[2]-y[1]):y[end]
+    x_range = x[1]:(x[2]-x[1]):x[end]
+    y_range = y[1]:(y[2]-y[1]):y[end]
     # Interpolate the data from the Cartesian grid to the polar grid 
     field_rt = Array(Float64,size(x_polar))
     field_interp = CoordInterpGrid((x_range,y_range), vardata, BCnan, InterpLinear);
@@ -133,8 +133,8 @@ function regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
                         vardata::Array{Td,3},
                         rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
-          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
+    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end

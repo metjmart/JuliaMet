@@ -24,14 +24,14 @@ function calc_rmw{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
                                               z::AbstractVector{Tb}, 
                                               azmean_vt::AbstractArray{Tc,2})
     # Create an array with the radial values at each height
-    local r_new = Array(Float64,length(r),length(z))
+    r_new = Array(Float64,length(r),length(z))
     for i in eachindex(z)
         r_new[:,i] = r
     end
     # Compute the azimuthal mean RMW at each vertical level
     rmw = similar(z,Float64)
     fill!(rmw, NaN)
-    local vtmax = findmax(azmean_vt,1)
+    vtmax = findmax(azmean_vt,1)
     for k in eachindex(z)
         # Only store the RMW values if they're present
         if vtmax[2][k] != 0

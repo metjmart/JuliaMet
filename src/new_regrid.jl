@@ -102,8 +102,8 @@ function new_regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::AbstractVector{Ta},
     #thresh_min = minimum(var[var .!= -999.0])
     #thresh_max = maximum(var[var .!= -999.0])
     # Determine the max radius of polar coordinate grid and the theta increment
-    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
-          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
+    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
@@ -112,12 +112,12 @@ function new_regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::AbstractVector{Ta},
     theta = collect(0:theta_inc:360-theta_inc)
     # Create two-dimensional arrays for r and theta components of the polar grid
     # Define the Cartesian points in terms of the 2-d polar coordinates
-    local r_2d,theta_2d = new_grid_2d(r,theta), 
-          x_polar = r_2d .* cos(deg2rad(theta_2d)),
-          y_polar = r_2d .* sin(deg2rad(theta_2d))
+    r_2d,theta_2d = new_grid_2d(r,theta)
+    x_polar = r_2d .* cos(deg2rad(theta_2d))
+    y_polar = r_2d .* sin(deg2rad(theta_2d))
     # Interpolate the data from the Cartesian grid to the polar grid 
     field_rt = Array(Float64,size(x_polar))
-    local field_interp = extrapolate(interpolate((x,y), var, Gridded(Linear())), NaN)
+    field_interp = extrapolate(interpolate((x,y), var, Gridded(Linear())), NaN)
     for i in eachindex(r)
         for j in eachindex(theta)
              field_rt[i,j] = field_interp[x_polar[i,j],y_polar[i,j]]
@@ -146,12 +146,12 @@ rt_out - Option to output r and theta arrays. Default is false.
 ==============================================================================#
 
 function new_regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
-                            x::AbstractVector{Ta},
-                            y::AbstractVector{Tb}, z::AbstractVector{Tc}, 
-                            var::AbstractArray{Td,3}, rt_out::Bool=false)
+                            x::AbstractVector{Ta}, y::AbstractVector{Tb}, 
+                            z::AbstractVector{Tc}, var::AbstractArray{Td,3}, 
+                            rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    local rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2)),
-          theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
+    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
     if theta_inc<1
         theta_inc=1
     end
@@ -205,10 +205,10 @@ function regrid_gfrelxz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}(
                         xsec_out::Bool=false)
                                                                      
     # Start by finding the minimum in y-vorticity(η) at the surface
-    local minyvort = minimum(yvort[:,1]),
-          minvort_ind = findin(yvort[:,1],minyvort)[1]
+    minyvort = minimum(yvort[:,1])
+    minvort_ind = findin(yvort[:,1],minyvort)[1]
     # Find the x-index where minyvort is located
-    local x_min = x[minvort_ind]
+    x_min = x[minvort_ind]
     # Define a function that will find the closest grid point to -1K
     function closest_index(arr,val)
         idiff = abs(arr-val)
@@ -218,9 +218,9 @@ function regrid_gfrelxz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}(
         return ibest
     end
     # Search for the -1K thpert within the x buffer range
-    local indxgf = closest_index(thpert[minvort_ind:end,1],-1.0),
-          xgf = x[minvort_ind:end][indxgf],
-          xgfnorm = x - xgf
+    indxgf = closest_index(thpert[minvort_ind:end,1],-1.0)
+    xgf = x[minvort_ind:end][indxgf]
+    xgfnorm = x - xgf
     # Interpolate the var to the location of the gust front 
     # Define the universal x-grid for the interpolation
     gfrel_var = Array(Float64,(length(xgfnorm),length(z)))
@@ -231,8 +231,8 @@ function regrid_gfrelxz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}(
         end    
     end   
     # Set the min and max range of the gfrel x-values (-50.0,20.0 for now)
-    local xgfmin = closest_index(xgfnorm,-50.0),
-          xgfmax = closest_index(xgfnorm,20.0)
+    xgfmin = closest_index(xgfnorm,-50.0)
+    xgfmax = closest_index(xgfnorm,20.0)
     # Define the x-section and var within the x-section
     xsec = xgfnorm[xgfmin:xgfmax]
     gfrel_var_xsec = gfrel_var[xgfmin:xgfmax,:]
@@ -274,10 +274,10 @@ function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
                          xsec_out::Bool=false)
     # Start by finding the minimum in y-vorticity(η) at the surface
     # Then find the x-index where minyvort is located at each y
-    local minyvort = similar(y,Float64),
-          minvort_ind = Array(Int64,length(y)),
-          x_min = similar(y),
-          xbuff = Array(Float64,21,length(y)) 
+    minyvort = similar(y,Float64)
+    minvort_ind = Array(Int64,length(y))
+    x_min = similar(y)
+    xbuff = Array(Float64,21,length(y)) 
     fill!(x_min, NaN)
     fill!(minyvort, NaN)
     for j in eachindex(y)
@@ -295,8 +295,8 @@ function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
         return ibest
     end
     # Search for the -1K thpert within the x buffer range
-    local xgf = similar(y,Float64),
-          xgfnorm = Array(Float64,length(x),length(y))
+    xgf = similar(y,Float64)
+    xgfnorm = Array(Float64,length(x),length(y))
     fill!(xgf, NaN)
     fill!(xgfnorm, NaN)
     for j in eachindex(y)
@@ -306,8 +306,8 @@ function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
     end
     # Interpolate the var to the location of the gust front 
     # Define the universal x-grid for the interpolation
-    local xunorm = collect(-170.0:129.0),
-          gfrel_var = Array(Float64,(length(xunorm),length(y),length(z)))
+    xunorm = collect(-170.0:129.0)
+    gfrel_var = Array(Float64,(length(xunorm),length(y),length(z)))
     for k in eachindex(z)
         for j in eachindex(y)
             fieldinterp = interpolate((xgfnorm[:,j],),var[:,j,k],Gridded(Linear()))
@@ -317,8 +317,8 @@ function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
         end   
     end 
     # Set the min and max range of the gfrel x-values (-50.0,20.0 for now)
-    local xgfmin = closest_index(xunorm,-50.0),
-          xgfmax = closest_index(xunorm,20.0)
+    xgfmin = closest_index(xunorm,-50.0)
+    xgfmax = closest_index(xunorm,20.0)
     # Define the x-section and var within the x-section
     xsec = xunorm[xgfmin:xgfmax]
     gfrel_var_xsec = gfrel_var[xgfmin:xgfmax,:,:]
