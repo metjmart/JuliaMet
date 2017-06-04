@@ -4,7 +4,7 @@
 
 Functions developed to analyze gridded meteorological data and model output. 
 
-Julia version: 0.4.5, 0.5.2 
+Julia versions tested: 0.4.5, 0.5.2 
 
 ## Package dependencies 
 
@@ -18,7 +18,7 @@ The following packages should be installed prior to using JuliaMet:
 * [PyPlot](https://github.com/JuliaPy/PyPlot.jl)
 
 This can be accomplished by opening the Julia REPL and running
-```
+```julia
 Pkg.add("Package")
 ```
 where "Package" is replaced by the package names listed above.
@@ -33,22 +33,24 @@ git clone https://github.com/metjmart/JuliaMet.git
 Since JuliaMet is not an official Julia package, it won't be located in 
 Julia's `LOAD_PATH`. Therefore, we have to manually extend `LOAD_PATH` to 
 include the location of JuliaMet. There are a couple ways to do this. 
-First, it can be extended by adding the following to the `~/.juliarc.jl` file 
+
+First, it can be extended by opening the `~/.juliarc.jl` file (or creating it 
+if it doesn't exist) and adding the following to the file
 (see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/)):
 ```
-push!(LOAD_PATH, "/path/to/JuliaMet/")
+push!(LOAD_PATH, "/path/to/JuliaMet.jl/")
 ```
 This will extend the `LOAD_PATH` on every Julia initialization. Alternatively, 
 we could append additional directories to our `LOAD_PATH` evironment variable 
 by adding the following to our `~/.bashrc` (or which ever shell is used) and 
 sourcing `~/.bashrc`:
 ```
-export JULIA_LOAD_PATH="/path/to/JuliaMet/"
+export JULIA_LOAD_PATH="/path/to/JuliaMet.jl/"
 source ~/.bashrc
 ```
 Either method will suffice! We should now be able to load JuliaMet as a custom
 module by adding the following to the beginning of our code:
-```
+```julia
 using JuliaMet
 ```
 
