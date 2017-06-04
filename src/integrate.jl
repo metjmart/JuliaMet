@@ -30,7 +30,7 @@ http://mathworld.wolfram.com/Newton-CotesFormulas.html for reference.
    it is recommended that the trapezoidal method is used for integrating 
    data interspersed with NaNs as the trapezoidal method does not place a 
    restriction on the number of sub-intervals required. For this reason, only 
-   the trapezoidal method searches for the presence of NaNs. If NaNs are only 
+   the trapezoidal method works in the presence of NaNs. If NaNs are only 
    present at the start and end of an analysis with continuous data in between, 
    the user can splice the data such that the NaNs are removed and the number 
    of sub-intervals present from start to end match the required number of 
@@ -39,7 +39,7 @@ http://mathworld.wolfram.com/Newton-CotesFormulas.html for reference.
 Methods
 
 :trapz   - trapezoidal (2-point) rule 
-:simps13 - Simpson's 1/3 (3-point) rule (requires 2 sub-intervals)
+:simps13 - Simpson's 1/3 (3-point) rule (requires even sub-intervals)
 :simps38 - Simpson's 3/8 (4-point) rule (requires multiple of 3 sub-intervals)
 :boole   - Boole's (5-point) rule (requires multiple of 4 sub-intervals)
 
