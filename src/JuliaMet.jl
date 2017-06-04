@@ -1,16 +1,11 @@
 module JuliaMet
 
-    using NetCDF
-    using DataStructures
-    using Grid
-    using Interpolations
-    using Colors
-    using PyPlot
+    using NetCDF, DataStructures, Grid, Interpolations, Colors, PyPlot
     plt = PyPlot
 
     export read_ncvars
     export finite_dz, finite_dr, finite_dx, finite_dy
-    export trapz_1d, trapz_2d, trapz_3d
+    export newton_cotes, trapz_1d, trapz_2d, trapz_3d
     export grid_2d, grid_3d, regrid_xy2rt, regrid_xyz2rtz
     export new_grid2d, new_grid3d, new_regrid_xy2rt, new_regrid_xyz2rtz, 
            regrid_gfrelxz, regrid_gfrel_xyz
