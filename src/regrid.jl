@@ -76,8 +76,6 @@ by working around issues with fill values when interpolating the data.
 ** Follows http://mathworld.wolfram.com/PolarCoordinates.html for converting 
    Cartesian to polar coordinates
  
-** The CoordInterpGrid function can handle the presence of NaNs
-
 rt_out - Option to output r and theta arrays, default is false.
 ==============================================================================#
 
@@ -85,8 +83,8 @@ function regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::Vector{Ta},y::Vector{Tb},
                                                   vardata::Array{Tc,2},
                                                   rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
+    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
@@ -133,15 +131,15 @@ function regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
                         vardata::Array{Td,3},
                         rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
+    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
     # Define r and theta
     r = collect(0:(x[2]-x[1]):rmax)
     theta = collect(0:theta_inc:360-theta_inc)
-   # Define the dimensions of the new var
+    # Define the dimensions of the new var
     field_rtz = Array(Float64,length(r),length(theta),length(z))
     # Call regridxy2rt at each vertical level 
     for k in eachindex(z)

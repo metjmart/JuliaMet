@@ -102,8 +102,8 @@ function new_regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::AbstractVector{Ta},
     #thresh_min = minimum(var[var .!= -999.0])
     #thresh_max = maximum(var[var .!= -999.0])
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
+    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
@@ -150,8 +150,8 @@ function new_regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
                             z::AbstractVector{Tc}, var::AbstractArray{Td,3}, 
                             rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt(((x[end]-x[1])/2.0)^2 + ((y[end]-y[1])/2.0)^2))
-    theta_inc = floor(atan2(y[2]-y[1],(x[end]-x[1])/2.0)/pi*180.0)
+    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
+    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
     if theta_inc<1
         theta_inc=1
     end
@@ -203,7 +203,6 @@ function regrid_gfrelxz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}(
                         z::AbstractVector{Tb}, yvort::AbstractArray{Tc,2}, 
                         thpert::AbstractArray{Td,2}, var::AbstractArray{Te,2}, 
                         xsec_out::Bool=false)
-                                                                     
     # Start by finding the minimum in y-vorticity(η) at the surface
     minyvort = minimum(yvort[:,1])
     minvort_ind = findin(yvort[:,1],minyvort)[1]
@@ -267,7 +266,8 @@ center.
 xsec_out - Option to output the x-dimension for the cross section
 ==============================================================================#
 
-function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
+function regrid_gfrelxyz{Ta<:Real,Tb<:Real,Tc<:Real,
+                         Td<:Real,Te<:Real,Tf<:Real}(
                          x::AbstractVector{Ta},y::AbstractVector{Tb},
                          z::AbstractVector{Tc},yvort::AbstractArray{Td,3},
                          thpert::AbstractArray{Te,3},var::AbstractArray{Tf,3},
