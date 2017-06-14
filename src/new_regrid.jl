@@ -102,8 +102,8 @@ function new_regrid_xy2rt{Ta<:Real,Tb<:Real,Tc<:Real}(x::AbstractVector{Ta},
     #thresh_min = minimum(var[var .!= -999.0])
     #thresh_max = maximum(var[var .!= -999.0])
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
-    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
+    rmax = ceil(sqrt((maximum(abs(x)))^2 + (maximum(abs(y))^2)))
+    theta_inc = floor(atan2(y[2]-y[1],maximum(abs(x)))/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
@@ -150,10 +150,10 @@ function new_regrid_xyz2rtz{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(
                             z::AbstractVector{Tc}, var::AbstractArray{Td,3}, 
                             rt_out::Bool=false)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt((x[end]-x[1])^2 + (y[end]-y[1])^2))
-    theta_inc = floor(atan2(y[2]-y[1],x[end]-x[1])/pi*180.0)
-    if theta_inc<1
-        theta_inc=1
+    rmax = ceil(sqrt((maximum(abs(x)))^2 + (maximum(abs(y))^2)))
+    theta_inc = floor(atan2(y[2]-y[1],maximum(abs(x)))/pi*180.0)
+    if theta_inc<1.0
+        theta_inc=1.0
     end
     # Define r and theta
     r = collect(0:(x[2]-x[1]):rmax)
