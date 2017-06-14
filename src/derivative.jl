@@ -29,6 +29,10 @@ function finite_dr{Ta<:Real,Tb<:Real}(r::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
     d1,d2,d3 = size(field)
+    if length(r) != d1
+        error("Vector r and first dimension of variable to be differentiated 
+               must be of same length")
+    end 
     dvardr = similar(field,Float64)
     fill!(dvardr, NaN)
     # Loop over all dimensions to compute the radial derivative
@@ -67,6 +71,10 @@ function finite_dx{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
     d1,d2,d3 = size(field)
+    if length(x) != d1
+        error("Vector x and first dimension of the variable to differentiated
+               must be of same length")
+    end 
     dvardx = similar(field,Float64)
     fill!(dvardx, NaN)
     # Loop over all dimensions to compute the x-derivative
@@ -105,6 +113,10 @@ function finite_dy{Ta<:Real,Tb<:Real}(y::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
     d1,d2,d3 = size(field)
+    if length(y) != d2 
+        error("Vector y and second dimension of the variable to differentiated
+               must be of same length")
+    end 
     dvardy = similar(field,Float64)
     fill!(dvardy, NaN)
     # Loop over all dimensions to compute the y-derivative
@@ -143,6 +155,10 @@ function finite_dz{Ta<:Real,Tb<:Real}(z::AbstractVector{Ta},
                                       field::AbstractArray{Tb,3})
     # Define the dimensions of the input variable
     d1,d2,d3 = size(field)
+    if length(z) != d3 
+        error("Vector z and third dimension of variable to be differentiated 
+               must be of same length")
+    end 
     dvardz = similar(field,Float64)
     fill!(dvardz, NaN)
     # Loop over all dimensions to compute the vertical derivative
@@ -185,6 +201,13 @@ function finite_laplacian{Ta<:Real,Tb<:Real,Tc<:Real}(
                           field::AbstractArray{Tc,3})
     # Define the dimensions of the input variable
     d1,d2,d3 = size(field) 
+    if length(x) != d1 
+        error("Vector x and first dimension of variable to be differentiated 
+               must be of same length")
+    elseif length(y) != d2
+        error("Vector y and second dimension of variable to be differentiated 
+               must be of same length")
+    end 
     hx = (x[2]-x[1])^2
     hy = (y[2]-y[1])^2
     out = similar(field,Float64)
