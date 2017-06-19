@@ -68,6 +68,28 @@ function calc_azmean{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
 
 end
 
+#==============================================================================
+uv2urvt
+
+Convert u (east-west) and v (north-south) winds to radial and tangential winds
+** Assumes u and v input winds are on an RTZ grid (radius,theta,height).
+** Input theta vector assumed to be in units of degrees
+==============================================================================#
+
+function uv2urvt{Ta<:Real,Tb<:Real,Tc<:Real}(theta::AbstractVector{Ta},
+                                             u::AbstractArray{Tb,3},
+                                             v::AbstractArray{Tc,3})
+    # Create the ur and vt arrays
+    ur = Array(Float64,size(u))
+    vt = Array(Float64,size(v))
+    # Convert u,v to ur,vt
+    for i in eachindex(theta)
+        ur[:,i,:] =  u[:,i,:] .* cos(deg2rad(theta[i])) + 
+                     v[:,i,:] .* sin(deg2rad(theta[i]))
+        vt[:,i,:] = -u[:,i,:] .* sin(deg2rad(theta[i])) + 
+                     v[:,i,:] .* cos(deg2rad(theta[i]))
+    end
  
+    return ur,vt
 
-
+end
