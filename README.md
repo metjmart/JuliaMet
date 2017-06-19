@@ -38,7 +38,7 @@ First, it can be extended by opening the `~/.juliarc.jl` file (or creating it
 if it doesn't exist) and adding the following to the file
 (see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/)):
 ```julia
-push!(LOAD_PATH, "/path/to/JuliaMet.jl/")
+push!(LOAD_PATH, "/path/to/JuliaMet/")
 ```
 This will extend the `LOAD_PATH` on every Julia initialization. Alternatively, 
 we could append additional directories to our `LOAD_PATH` evironment variable 
