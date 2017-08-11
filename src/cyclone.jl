@@ -117,7 +117,7 @@ Example of how to use the function
     fl_time,fl_lon,fl_lat,foreR_lon,foreR_lat,foreL_lon,foreL_lat,
     aftR_lon,aftR_lat,aftL_lon,aftL_lat = p3swploc(filein);
 
-# Specify a time for the P3 location
+    # Specify a time for the P3 location
 
     p3time = 173839.0
     p3ind = findin(fl_time,p3time)[1]
