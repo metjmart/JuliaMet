@@ -180,17 +180,17 @@ function trapz_3d{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(x::AbstractVector{Ta},
                                                        y::AbstractVector{Tb},
                                                        z::AbstractVector{Tc},
                                                        var::AbstractArray{Td,3})
-    int = Array(Float64,length(x),length(y)) 
+    int1 = Array(Float64,length(x),length(y)) 
     fill!(int1, NaN)
     int2 = similar(x)
     fill!(int2, NaN)
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            int1[i,j] = trapz_1d(z,var[i,j,:])
+            int1[i,j] = trapz_1d(z,squeeze(squeeze(var[i,j,:],2),1))
         end
         # Integrate along y-axis
-        int2[i] = trapz_1d(y,int1[i,:])
+        int2[i] = trapz_1d(y,squeeze(int1[i,:],1))
     end
     # Integrate along x-axis
     int3 = trapz_1d(x,int2)
