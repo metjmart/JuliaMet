@@ -9,12 +9,9 @@ module JuliaMet
     export grid_2d, grid_3d, regrid_xy2rt, regrid_xyz2rtz
     export new_grid2d, new_grid3d, new_regrid_xy2rt, new_regrid_xyz2rtz, 
            regrid_gfrelxz, regrid_gfrel_xyz
-<<<<<<< Updated upstream
     export calc_rmw, calc_azmean, uv2urvt, p3swploc
-=======
     export calc_rmw, calc_azmean
     export stationary_frame
->>>>>>> Stashed changes
     export nanmax, nanmin, nansum, nanmean, nanmedian, nanvar, nanstd,
            nanskewness, nankurtosis
     export obslocs_rtz
