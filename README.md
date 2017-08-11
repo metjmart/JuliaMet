@@ -38,14 +38,14 @@ First, it can be extended by opening the `~/.juliarc.jl` file (or creating it
 if it doesn't exist) and adding the following to the file
 (see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/)):
 ```julia
-push!(LOAD_PATH, "/path/to/JuliaMet/")
+push!(LOAD_PATH, "/path/to/JuliaMet/src/")
 ```
 This will extend the `LOAD_PATH` on every Julia initialization. Alternatively, 
 we could append additional directories to our `LOAD_PATH` evironment variable 
 by adding the following to our `~/.bashrc` (or which ever shell is used) and 
 sourcing `~/.bashrc`:
 ```
-export JULIA_LOAD_PATH="/path/to/JuliaMet.jl/"
+export JULIA_LOAD_PATH="/path/to/JuliaMet/src/"
 source ~/.bashrc
 ```
 Either method will suffice! We should now be able to load JuliaMet as a custom
@@ -63,7 +63,7 @@ using JuliaMet
 * Functions to aid in numerical analyses (e.g., derivatives, means, etc.)
 
 ### integrate.jl
-* Simple integration methods
+* Various integration methods for discretized data
 
 ### regrid.jl 
 * Interpolate functions using the deprecated CoordInterpGrid.jl package 
@@ -72,7 +72,10 @@ using JuliaMet
 * Interpolate functions using the new Interpolations.jl package
 
 ### cyclone.jl 
-* Simple functions to calculate relevant quantities with tropical cyclone data
+* Functions to calculate relevant quantities with tropical cyclone data
+
+### steady_frame.jl
+* Functions used to compute the most steady frame of reference given Doppler velocity observations
 
 ### colormaps.jl 
 * Access and create colorbars in Julia
