@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.4.5
+# Julia version: 0.5.2
 #
 # This script contains functions required to compute the most steady frame of 
 # reference from Doppler radar data as described by Matejka (2002).
