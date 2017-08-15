@@ -33,16 +33,16 @@ dict_opt - specify if output type should be a dictionary - defualt is false
 function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                      mask_opt::Bool=true,dict_opt::Bool=false)
     # Determine if one or more vars needs to be read in
-    # If one var, type is string
-    if typeof(varnames) <: AbstractString
-        println("Reading in " * varnames * " ...")
-        vardata = ncread(ncfile, varnames)
+    # One var
+    if length(varnames) == 1
+        println("Reading in " * varnames[1] * " ...")
+        vardata = ncread(ncfile, varnames[1])
         if ndims(vardata) == 1
             # Determine if values need to be masked
             if mask_opt == true
                 # If they do, determine the fill/miss values for the variable
-                fillval = ncgetatt(ncfile,var,"_FillValue")
-                missval = ncgetatt(ncfile,var,"missing_value")
+                fillval = ncgetatt(ncfile,varnames[1],"_FillValue")
+                missval = ncgetatt(ncfile,varnames[1],"missing_value")
                 # Only replace fill/mask values with NaN if fill/mask values 
                 # exist for the variable
                 if typeof(fillval) != Void
@@ -68,8 +68,8 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
             # Determine if fill values need to be masked
             if mask_opt == true
                 # If they do, determine the fill/mask values for the variable
-                fillval = ncgetatt(ncfile,var,"_FillValue")
-                missval = ncgetatt(ncfile,var,"missing_value")
+                fillval = ncgetatt(ncfile,varnames[1],"_FillValue")
+                missval = ncgetatt(ncfile,varnames[1],"missing_value")
                 # Only replace fill/miss values with NaN if fill/miss values 
                 # exist for the variable
                 if typeof(fillval) != Void
@@ -77,16 +77,16 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 elseif typeof(fillval) == Void && typeof(missval) != Void
                     vardata[findin(vardata,missval)] = NaN
                 end
-                println("Successfully read in " * varnames * "!")
+                println("Successfully read in " * varnames[1] * "!")
                 return vardata
             else
                 # If no masking, just return svardata
-                println("Successfully read in " * varnames * "!")
+                println("Successfully read in " * varnames[1] * "!")
                 return vardata
             end
         end 
-    # If more than one var, type is list
-    elseif typeof(varnames) <: Array
+    # More than one var
+    elseif length(varnames) > 1
         # Create an ordered dict for the vars
         varsdata = OrderedDict()
         svarsdata = OrderedDict()
