@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.4.5
+# Julia version: 0.5.2
 #
 # This script contains a set of functions to integrate in different dimensions 
 # using the trapezoidal method.
@@ -187,10 +187,10 @@ function trapz_3d{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(x::AbstractVector{Ta},
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            int1[i,j] = trapz_1d(z,squeeze(squeeze(var[i,j,:],2),1))
+            int1[i,j] = trapz_1d(z,var[i,j,:])
         end
         # Integrate along y-axis
-        int2[i] = trapz_1d(y,squeeze(int1[i,:],1))
+        int2[i] = trapz_1d(y,int1[i,:])
     end
     # Integrate along x-axis
     int3 = trapz_1d(x,int2)
