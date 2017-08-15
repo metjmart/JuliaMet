@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.4.5
+# Julia version: 0.5.2
 #
 # This script contains functions that are more or less specific to tropical 
 # cyclone related applications.

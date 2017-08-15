@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.4.5
+# Julia version: 0.5.2
 #
 # This script contains functions to regrid data using various methods.
 #

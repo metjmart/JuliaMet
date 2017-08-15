@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia Version: 0.4.5
+# Julia Version: 0.5.2
 #
 # This script contains several functions used to calculate derivatives with 
 # second-order accurate (3-point) stencils. 

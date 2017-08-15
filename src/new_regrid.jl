@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.4.5
+# Julia version: 0.5.2
 #
 # ** Functions seem to be handling NaNs correctly with added 
 # extrapolate functionality. Preliminary tests showed no differences using 
