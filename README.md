@@ -4,7 +4,7 @@
 
 Functions developed to analyze gridded meteorological data and model output. 
 
-Julia versions tested: 0.4.5, 0.5.2 
+Julia versions tested: 0.5.2 
 
 ## Package dependencies 
 
