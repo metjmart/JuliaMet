@@ -138,7 +138,8 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
             return collect(values(svarsdata))
         end
     else  
-       error("Failed to read in var(s), be sure to define them as a string or an array of strings!")
+       error("Failed to read in var(s), be sure to define them as a string 
+              or an array of strings!")
     end 
 end    
 
