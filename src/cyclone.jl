@@ -76,11 +76,11 @@ function calc_azmean{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
         for i in eachindex(r)
                 azmean_var[i] = nanmean(var[i,:])
         end
+        
+        return azmean_var
     else 
         error("Input array must have dimensions of (radius,theta,z) 
               or (radius,theta)")
-
-        return azmean_var
     end 
 end
 
