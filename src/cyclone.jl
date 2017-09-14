@@ -27,8 +27,8 @@ function calc_rmw{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
                                               azmean_vt::AbstractArray{Tc,2})
     # Create an array with the radial values at each height
     r_new = Array(Float64,length(r),length(z))
-    for i in eachindex(z)
-        r_new[:,i] = r
+    for k in eachindex(z)
+        r_new[:,k] = r
     end
     # Compute the azimuthal mean RMW at each vertical level
     rmw = similar(z,Float64)
@@ -49,51 +49,75 @@ end
 calc_azmean
 
 Compute the azimuthal mean of the input variable. 
+Input variable can be 2-D (r,theta) or 3-D (r,theta,z)
 ** Be sure to use the nanmean function since NaNs may be present
-** var needs to be a three dimensional field that's indexed r,theta,z
 ==============================================================================#
 
 function calc_azmean{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
                                                  z::AbstractVector{Tb},
-                                                 var::AbstractArray{Tc,3})
-    # Define an array for the azimuthal mean
-    azmean_var = Array(Float64,length(r),length(z)) 
-    fill!(azmean_var, NaN)
-    # Calculate the azimuthal mean 
-    for i in eachindex(r)
-        for j in eachindex(z)
-            azmean_var[i,j] = nanmean(var[i,:,j])
+                                                 var::AbstractArray{Tc})
+    if ndims(var) == 3
+        # Define an array for the azimuthal mean
+        azmean_var = Array(Float64,length(r),length(z)) 
+        fill!(azmean_var, NaN)
+        # Calculate the azimuthal mean 
+        for k in eachindex(z)
+            for i in eachindex(r)
+                azmean_var[i,k] = nanmean(var[i,:,k])
+            end
         end
-    end
 
-    return azmean_var
+        return azmean_var
+    elseif ndims(var) == 2
+        # Define an array for the azimuthal mean
+        azmean_var = Array(Float64,length(r))
+        fill!(azmean_var, NaN)
+        # Calculate the azimuthal mean 
+        for i in eachindex(r)
+                azmean_var[i] = nanmean(var[i,:])
+        end
+    else 
+        error("Input array must have dimensions of (radius,theta,z) 
+              or (radius,theta)")
 
+        return azmean_var
+    end 
 end
 
 #==============================================================================
 uv2urvt
 
 Convert u (east-west) and v (north-south) winds to radial and tangential winds
-** Assumes u and v input winds are on an RTZ grid (radius,theta,height).
+Input u and v can either be 2-D (r,theta) or 3-D (r,theta,z)
 ** Input theta vector assumed to be in units of degrees
 ==============================================================================#
 
 function uv2urvt{Ta<:Real,Tb<:Real,Tc<:Real}(theta::AbstractVector{Ta},
-                                             u::AbstractArray{Tb,3},
-                                             v::AbstractArray{Tc,3})
+                                             u::AbstractArray{Tb},
+                                             v::AbstractArray{Tc})
     # Create the ur and vt arrays
     ur = Array(Float64,size(u))
     vt = Array(Float64,size(v))
     # Convert u,v to ur,vt
-    for i in eachindex(theta)
-        ur[:,i,:] =  u[:,i,:] .* cos(deg2rad(theta[i])) + 
-                     v[:,i,:] .* sin(deg2rad(theta[i]))
-        vt[:,i,:] = -u[:,i,:] .* sin(deg2rad(theta[i])) + 
-                     v[:,i,:] .* cos(deg2rad(theta[i]))
-    end
- 
-    return ur,vt
+    if ndims(u) == 3 
+        for j in eachindex(theta)
+            ur[:,j,:] =  u[:,j,:] .* cos(deg2rad(theta[j])) + 
+                         v[:,j,:] .* sin(deg2rad(theta[j]))
+            vt[:,j,:] = -u[:,j,:] .* sin(deg2rad(theta[j])) + 
+                         v[:,j,:] .* cos(deg2rad(theta[j]))
+        end
 
+        return ur,vt
+    else 
+        for j in eachindex(theta)
+            ur[:,j] =  u[:,j] .* cos(deg2rad(theta[j])) + 
+                       v[:,j] .* sin(deg2rad(theta[j]))
+            vt[:,j] = -u[:,j] .* sin(deg2rad(theta[j])) + 
+                       v[:,j] .* cos(deg2rad(theta[j]))
+        end
+
+        return ur,vt
+    end
 end
 
 #==============================================================================
