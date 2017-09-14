@@ -7,11 +7,11 @@ module JuliaMet
     export finite_dz, finite_dr, finite_dx, finite_dy
     export newton_cotes, trapz_1d, trapz_2d, trapz_3d
     export grid_2d, grid_3d, regrid_xy2rt, regrid_xyz2rtz
-    export new_grid2d, new_grid3d, new_regrid_xy2rt, new_regrid_xyz2rtz, 
-           regrid_gfrelxz, regrid_gfrel_xyz
+    export closest_ind, new_grid2d, new_grid3d, new_regrid_xy2rt, 
+           new_regrid_xyz2rtz, regrid_gfrelxz, regrid_gfrel_xyz
     export calc_rmw, calc_azmean, uv2urvt, p3swploc
-    export calc_rmw, calc_azmean
     export stationary_frame
+    export p_centroid
     export nanmax, nanmin, nansum, nanmean, nanmedian, nanvar, nanstd,
            nanskewness, nankurtosis
     export obslocs_rtz
@@ -28,6 +28,7 @@ module JuliaMet
     include("new_regrid.jl")
     include("cyclone.jl")
     include("steady_frame.jl")
+    include("center_finding.jl")
     include("nanstats.jl")
     include("samurai_obslocs.jl")
     include("colormaps.jl")
