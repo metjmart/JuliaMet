@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # This script contains functions that will handle reading and writing NetCDF 
 # files in Julia.
@@ -32,6 +32,7 @@ dict_opt - specify if output type should be a dictionary - defualt is false
 
 function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                      mask_opt::Bool=true,dict_opt::Bool=false)
+
     # Determine if one or more vars needs to be read in
     # One var
     if length(varnames) == 1
