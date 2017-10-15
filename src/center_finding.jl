@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # This script contains functions for various methods of determining the center 
 # of a tropical cyclone. 
@@ -12,7 +12,6 @@
 # 
 # p_centroid (Adapted from Ellie Delap)
 # More to come ...
-#
 # *****************************************************************************
 
 #==============================================================================
@@ -27,17 +26,16 @@ The function can handle one time-step so the user must create a loop if
 the pressure centroid for each time step is desired.
 ==============================================================================#
 
-function p_centroid{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
-                    x::AbstractVector{Ta}, y::AbstractVector{Tb},
-                    z::AbstractVector{Tc}, prs::AbstractArray{Td,3},
-                    u::AbstractArray{Te,3}, v::AbstractArray{Tf,3}, 
+function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                    z::AbstractVector{<:Real},prs::AbstractArray{<:Real,3},
+                    u::AbstractArray{<:Real,3},v::AbstractArray{<:Real,3},
                     prnt_cents::Bool=false)
     
     # First guess is minimum pressure centroid using R = 100 km 
     # at each vertical level
-    xx,yy = grid_2d(x,y)
-    xbar0 = Array(Float64, length(z))
-    ybar0 = Array(Float64, length(z))
+    xx,yy = grid2d(x,y)
+    xbar0 = Array{Float64}(length(z))
+    ybar0 = Array{Float64}(length(z))
     pp    = similar(prs)
     z2km  = closest_ind(z,2.0) # Only find centroids for 
     z8km  = closest_ind(z,8.0) # the 2-8 km layer
@@ -47,7 +45,7 @@ function p_centroid{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
             pminx = x[findin(x,xx[min_ind])[1]]
             pminy = y[findin(y,yy[min_ind])[1]]
             # Compute pp as p - p_env
-            r,theta,prs_rtz = new_regrid_xy2rt(pminx,pminy,x,y,prs[:,:,k],true)
+            r,theta,prs_rtz = regrid_xy2rt(pminx,pminy,x,y,prs[:,:,k],true)
             azmean_p = calc_azmean(r,z,prs_rtz)
             # p_env is azimuthally averaged p at r = 500 km
             r500 = closest_ind(r,500)
@@ -76,8 +74,8 @@ function p_centroid{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
     end
     # Now use the first guess at 2 km to interpolate data 
     # and find azimuthal mean RMW 
-    r,theta,u_rtz = new_regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,u[:,:,z2km],true)
-    v_rtz = new_regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,v[:,:,z2km])
+    r,theta,u_rtz = regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,u[:,:,z2km],true)
+    v_rtz = regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,v[:,:,z2km])
     # Convert u,v at 2 km to ur,vt
     ur,vt = uv2urvt(theta,u_rtz,v_rtz)
     # Compute the azimuthal mean tangential wind
@@ -143,16 +141,3 @@ function p_centroid{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}(
     return pcx, pcy
 end
        
-
-
-
-
-
-
-
-
-
-
-
-
-
