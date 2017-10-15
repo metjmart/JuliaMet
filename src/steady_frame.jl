@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # This script contains functions required to compute the most steady frame of 
 # reference from Doppler radar data as described by Matejka (2002).
@@ -29,8 +29,8 @@ t3file = Gridded Doppler radar analysis for third " "
 U = 1d U-motion array, ideally with best guess in the specified range
     ** Set the resolution of the array to 1 m/s to iterate over large ranges
 V = 1d V-motion array, " " 
-zr = Radar altitude which can be obtained from metadata in soloii or solo3
-   
+zr = Radar altitude which can be obtained from metadata in soloii, solo3, or
+     online   
 Output vars:
 Q = Matrix of values computed from (39) and (42) for U,V 
 U = From input: U-velocity 
@@ -39,10 +39,9 @@ numer_out = Numerator of (42) evaluated
 rho_norm = Normalizing factor (denominator) of (42) evaluated
 ==============================================================================#
 
-function stationary_frame{Ta<:Real,Tb<:Real,Tc<:Real}(t1file::AbstractString,
-                         t2file::AbstractString,t3file::AbstractString,
-                         U::AbstractVector{Ta},V::AbstractVector{Tb},
-                         zr::Tc)
+function stationary_frame(t1file::AbstractString,t2file::AbstractString,
+                          t3file::AbstractString,U::AbstractVector{<:Real},
+                          V::AbstractVector{<:Real},zr::Real)
                                                         
     # Define the required input vars for each time 
     # *** Only importing x,y,z once assuming they're identical 
@@ -66,7 +65,7 @@ function stationary_frame{Ta<:Real,Tb<:Real,Tc<:Real}(t1file::AbstractString,
 
     # Create 3d x,y,z arrays
 
-    x3d,y3d,z3d = grid_3d(x,y,z)    
+    x3d,y3d,z3d = grid3d(x,y,z)    
 
     # Convert the 3d array units to meters
 
@@ -123,11 +122,11 @@ function stationary_frame{Ta<:Real,Tb<:Real,Tc<:Real}(t1file::AbstractString,
 
     # Create the array for Q and compute it for a subset of U and V
 
-    Q = Array(Float64,length(U),length(V))
+    Q = Array{Float64}(length(U),length(V))
 
     # Output array for numerator in equation (42)
 
-    numer_out = Array(Float64,length(U),length(V))
+    numer_out = Array{Float64}(length(U),length(V))
 
     for i in eachindex(U)
         for j in eachindex(V) 
@@ -196,7 +195,7 @@ function stationary_frame{Ta<:Real,Tb<:Real,Tc<:Real}(t1file::AbstractString,
 
     # Create 2D arrays for U and V since Q is 2D
     
-    U2d,V2d = grid_2d(U,V)
+    U2d,V2d = grid2d(U,V)
     
     # Find the index of minimum Q
     
