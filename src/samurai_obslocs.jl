@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # -- Adapted from Ellie Delap -- 
 #
@@ -12,7 +12,6 @@
 # 
 # Function List:
 # obslocs_rtz
-# More to come...
 # *****************************************************************************
 
 #==============================================================================
@@ -28,6 +27,7 @@ the dictionary and automatically create specified figures.
 function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
                      month::AbstractString,day::AbstractString,rmax,zmax,
                      data_out=false,plots_out=false)
+
     # Read in the data 
     dlmdata = readdlm(filein, '\t'); 
     # Define the dimension sizes
@@ -41,7 +41,7 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
     dtype = Array{Float64}(dlmdata[2:nrows,6])
     # Need to import time as a string and convert to type Int
     time_str = Array{AbstractString}(dlmdata[2:nrows,7])
-    time = Array(Int64,size(time_str))
+    time = Array{Int64}(size(time_str))
     for i in collect(1:length(time))
         time[i] = parse(Int,time_str[i][1:3]*time_str[i][5:6]*time_str[i][8:9])
     end  
@@ -102,7 +102,8 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
         return data_dict  
     end
     # Create png figures if plots_out is true
-    #if plots_out == true
+    # *** This section is under construction! Not sure if it works.
+    if plots_out == true
 
         # Figure 1 - Dropsonde, flight level, sfmr in r-z
         # Plot the locations of dropsonde and flight level if both
@@ -112,42 +113,42 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
         # Plot data in the r-z plane
         if haskey(data_dict,0) && haskey(data_dict,1)
             # Plot the dropsonde and flight level data 
-            plt.scatter(data_dict[0]["radius"], data_dict[0]["z"], marker="o", color="red")
-            plt.scatter(data_dict[1]["radius"], data_dict[1]["z"], marker="o", color="blue")
+            PyPlot.scatter(data_dict[0]["radius"], data_dict[0]["z"], marker="o", color="red")
+            PyPlot.scatter(data_dict[1]["radius"], data_dict[1]["z"], marker="o", color="blue")
             # Set plot configuration
-            ax = plt.axes()
+            ax = PyPlot.axes()
             ax[:axis]([0,rmax,0,zmax])
             ax[:legend](["Dropsonde", "Flight Level"])
             ax[:set_title]("Non-radar observations")
             ax[:set_xlabel]("Radius (km)")
             ax[:set_ylabel]("Altitude (km)")
             # Save the figure
-            plt.savefig("./" * name * year * month * day * "_dropsonde_fl_rz.png")
+            PyPlot.savefig("./" * name * year * month * day * "_dropsonde_fl_rz.png")
             println("Succesfully plotted dropsonde and flight level data in r-z plane!")
         elseif haskey(data_dict,0) && !haskey(data_dict,1)
             # Plot just the dropsonde data if flight level is missing
-            plt.scatter(data_dict[0]["radius"], data_dict[0]["z"], marker="o", color="red")
+            PyPlot.scatter(data_dict[0]["radius"], data_dict[0]["z"], marker="o", color="red")
             # Set plot configuration
-            ax = plt.axes()
+            ax = PyPlot.axes()
             ax[:axis]([0,rmax,0,zmax])
             ax[:legend](["Dropsonde"])
             ax[:set_title]("Non-radar observations")
             ax[:set_xlabel]("Radius (km)")
             ax[:set_ylabel]("Altitude (km)")
-            plt.savefig("./" * name * year * month * day * "_dropsonde_rz.png")
+            PyPlot.savefig("./" * name * year * month * day * "_dropsonde_rz.png")
             println("Succesfully plotted dropsonde data in r-z plane!")
         elseif !haskey(data_dict,0) && haskey(data_dict,1)
             # Plot just the flight level data if dropsondes are missing
-            plt.scatter(data_dict[1]["radius"], data_dict[1]["z"], marker="o", color="blue")
+            PyPlot.scatter(data_dict[1]["radius"], data_dict[1]["z"], marker="o", color="blue")
             # Set plot configuration
-            ax = plt.axes()
+            ax = PyPlot.axes()
             ax[:axis]([0,rmax,0,zmax])
             ax[:legend](["Flight Level"])
             ax[:set_title]("Non-radar observations")
             ax[:set_xlabel]("Radius (km)")
             ax[:set_ylabel]("Altitude (km)")
             # Save the figure
-            plt.savefig("./" * name * year * month * day * "_fl_rz.png")
+            PyPlot.savefig("./" * name * year * month * day * "_fl_rz.png")
             println("Succesfully plotted flight level data in r-z plane!")
         end
     
@@ -159,9 +160,9 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
         # Plot data in the r-theta plane
         if haskey(data_dict,0) && haskey(data_dict,1)
             # Plot the flight level and dropsonde data
-            ax = plt.axes(polar="true")
-            plt.scatter((deg2rad(data_dict[0]["theta"])-pi/2).*-1, data_dict[0]["radius"], marker="o", color="red")
-            plt.scatter((deg2rad(data_dict[1]["theta"])-pi/2).*-1, data_dict[1]["radius"], marker="o", color="blue")
+            ax = PyPlot.axes(polar="true")
+            PyPlot.scatter((deg2rad.(data_dict[0]["theta"])-pi/2).*-1, data_dict[0]["radius"], marker="o", color="red")
+            PyPlot.scatter((deg2rad.(data_dict[1]["theta"])-pi/2).*-1, data_dict[1]["radius"], marker="o", color="blue")
             # Set plot configuration
             ax[:axis]([0,360,0,rmax])
             ax[:set_theta_zero_location]("N")
@@ -170,12 +171,12 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
             ax[:legend](["Dropsonde", "Flight Level"])
             ax[:set_title]("Non-radar observations",y=1.06)
             # Save the figure
-            plt.savefig("./" * name * year * month * day * "_dropsonde_fl_rt.png")
+            PyPlot.savefig("./" * name * year * month * day * "_dropsonde_fl_rt.png")
             println("Succesfully plotted dropsonde and flight level data in r-theta plane!")
         elseif haskey(data_dict,0) && !haskey(data_dict,1)
             # Plot just the dropsonde data if flight level is missing
-            ax = plt.axes(polar="true")
-            plt.scatter((deg2rad(data_dict[0]["theta"])-pi/2).*-1, data_dict[0]["radius"], marker="o", color="red")
+            ax = PyPlot.axes(polar="true")
+            PyPlot.scatter((deg2rad.(data_dict[0]["theta"])-pi/2).*-1, data_dict[0]["radius"], marker="o", color="red")
             ax[:axis]([0,360,0,rmax])
             # Set plot configuration
             ax[:axis]([0,360,0,rmax])
@@ -184,19 +185,19 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
             ax[:set_rlabel_position](75)
             ax[:legend](["Dropsonde"])
             ax[:set_title]("Non-radar observations",y=1.06)
-            plt.savefig("./" * name * year * month * day * "_dropsonde_rt.png")
+            PyPlot.savefig("./" * name * year * month * day * "_dropsonde_rt.png")
             println("Succesfully plotted dropsonde data in r-theta plane!")
         elseif !haskey(data_dict,0) && haskey(data_dict,1)
             # Plot just the flight level data if dropsondes are missing
-            ax = plt.axes(polar="true")
-            plt.scatter((deg2rad(data_dict[1]["theta"])-pi/2).*-1, data_dict[1]["radius"], marker="o", color="blue")
+            ax = PyPlot.axes(polar="true")
+            PyPlot.scatter((deg2rad.(data_dict[1]["theta"])-pi/2).*-1, data_dict[1]["radius"], marker="o", color="blue")
             ax[:axis]([0,360,0,rmax])
             ax[:set_theta_zero_location]("N")
             ax[:set_theta_direction](-1)
             ax[:set_rlabel_position](75)
             ax[:legend](["Flight Level"])
             ax[:set_title]("Non-radar observations",y=1.06)
-            plt.savefig("./" * name * year * month * day * "_fl_rt.png")
+            PyPlot.savefig("./" * name * year * month * day * "_fl_rt.png")
             println("Succesfully plotted flight level data in r-theta plane!")
         end
     
@@ -204,15 +205,15 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
     
         # Plot the radar data in the r-z plane if it's present
         if haskey(data_dict,2) 
-            plt.scatter(data_dict[2]["radius"], data_dict[2]["z"], marker=".", color="black")
+            PyPlot.scatter(data_dict[2]["radius"], data_dict[2]["z"], marker=".", color="black")
             # Set plot configuration
-            ax = plt.axes()
+            ax = PyPlot.axes()
             ax[:axis]([0,rmax,0,zmax])
             ax[:set_title]("Radar observations")
             ax[:set_xlabel]("Radius (km)")
             ax[:set_ylabel]("Altitude (km)")
             # Save the figure
-            plt.savefig("./" * name * year * month * day * "_radar_rz.png")
+            PyPlot.savefig("./" * name * year * month * day * "_radar_rz.png")
             println("Succesfully plotted radar data in r-z plane!")
         end
     
@@ -220,8 +221,8 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
     
         # Plot the radar data in the r-theta plane if it's present
         if haskey(data_dict,2)
-            ax = plt.axes(polar="true")
-            plt.scatter((deg2rad(data_dict[2]["theta"])-pi/2).*-1, data_dict[2]["radius"], marker=".", color="black")
+            ax = PyPlot.axes(polar="true")
+            PyPlot.scatter((deg2rad.(data_dict[2]["theta"])-pi/2).*-1, data_dict[2]["radius"], marker=".", color="black")
             ax[:axis]([0,360,0,rmax])
             # Set plot configuration
             ax[:axis]([0,360,0,rmax])
@@ -229,24 +230,11 @@ function obslocs_rtz(filein,name::AbstractString,year::AbstractString,
             ax[:set_theta_direction](-1)
             ax[:set_rlabel_position](75)
             ax[:set_title]("Radar observations",y=1.06)
-            plt.savefig("./" * name * year * month * day * "_radar_rt.png")
+            PyPlot.savefig("./" * name * year * month * day * "_radar_rt.png")
             println("Succesfully plotted radar data in r-theta plane!")
         end 
 
-    #end
+    end
  
 end
-
-#==============================================================================
-obslocs_xyz
-
-This function reads in the SAMURAI_QC_analysis.out file in cartesian
-coordinates and stores the xyz location of each data type in a dictionary. The
-dictionary keys are the data types (integers) and the subkeys are the names 
-of the data types (e.g. obs, inverse_error, etc.). The function will output 
-the dictionary and automatically create specified figures.
-==============================================================================#
-
-
-
 
