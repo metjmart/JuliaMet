@@ -3,13 +3,13 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # This script contains functions that are more or less specific to tropical 
 # cyclone related applications.
 # 
 # calc_rmw
-# calc_azmean
+# azmean
 # uv2urvt
 # p3swploc
 # *****************************************************************************
@@ -22,11 +22,15 @@ level. Assumes that the input vt is the azimuthally averaged vt and has
 dimensions of r,z.
 ==============================================================================#
 
-function calc_rmw{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
-                                              z::AbstractVector{Tb}, 
-                                              azmean_vt::AbstractArray{Tc,2})
+function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
+                  azmean_vt::AbstractArray{<:Real,2})
+
+    if size(azmean_vt) != (length(r),length(z))
+        error("Input tangential wind variable must have dimensions 
+               of (radius,z)")
+    end 
     # Create an array with the radial values at each height
-    r_new = Array(Float64,length(r),length(z))
+    r_new = Array{Float64}(length(r),length(z))
     for k in eachindex(z)
         r_new[:,k] = r
     end
@@ -46,19 +50,36 @@ function calc_rmw{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
 end
 
 #==============================================================================
-calc_azmean
+azmean
 
 Compute the azimuthal mean of the input variable. 
 Input variable can be 2-D (r,theta) or 3-D (r,theta,z)
 ** Be sure to use the nanmean function since NaNs may be present
 ==============================================================================#
 
-function calc_azmean{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
-                                                 z::AbstractVector{Tb},
-                                                 var::AbstractArray{Tc})
-    if ndims(var) == 3
+function azmean(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
+                var::AbstractArray{<:Real})
+
+    if ndims(var) == 2
+        if size(var)[1] != length(r)
+            error("Vector r and first dimension of input variable must be of 
+                   same length")
+        end 
         # Define an array for the azimuthal mean
-        azmean_var = Array(Float64,length(r),length(z)) 
+        azmean_var = Array{Float64}(length(r))
+        fill!(azmean_var, NaN)
+        # Calculate the azimuthal mean 
+        for i in eachindex(r)
+                azmean_var[i] = nanmean(var[i,:])
+        end
+        
+        return azmean_var
+    elseif ndims(var) == 3
+        if size(var)[1] != length(r) || size(var)[3] != length(z)
+            error("Input variable must have dimensions of (radius,theta,z)")
+        end 
+        # Define an array for the azimuthal mean
+        azmean_var = Array{Float64}(length(r),length(z)) 
         fill!(azmean_var, NaN)
         # Calculate the azimuthal mean 
         for k in eachindex(z)
@@ -68,19 +89,6 @@ function calc_azmean{Ta<:Real,Tb<:Real,Tc<:Real}(r::AbstractVector{Ta},
         end
 
         return azmean_var
-    elseif ndims(var) == 2
-        # Define an array for the azimuthal mean
-        azmean_var = Array(Float64,length(r))
-        fill!(azmean_var, NaN)
-        # Calculate the azimuthal mean 
-        for i in eachindex(r)
-                azmean_var[i] = nanmean(var[i,:])
-        end
-        
-        return azmean_var
-    else 
-        error("Input array must have dimensions of (radius,theta,z) 
-              or (radius,theta)")
     end 
 end
 
@@ -92,32 +100,43 @@ Input u and v can either be 2-D (r,theta) or 3-D (r,theta,z)
 ** Input theta vector assumed to be in units of degrees
 ==============================================================================#
 
-function uv2urvt{Ta<:Real,Tb<:Real,Tc<:Real}(theta::AbstractVector{Ta},
-                                             u::AbstractArray{Tb},
-                                             v::AbstractArray{Tc})
-    # Create the ur and vt arrays
-    ur = Array(Float64,size(u))
-    vt = Array(Float64,size(v))
-    # Convert u,v to ur,vt
-    if ndims(u) == 3 
-        for j in eachindex(theta)
-            ur[:,j,:] =  u[:,j,:] .* cos(deg2rad(theta[j])) + 
-                         v[:,j,:] .* sin(deg2rad(theta[j]))
-            vt[:,j,:] = -u[:,j,:] .* sin(deg2rad(theta[j])) + 
-                         v[:,j,:] .* cos(deg2rad(theta[j]))
-        end
+function uv2urvt(theta::AbstractVector{<:Real},u::AbstractArray{<:Real},
+                 v::AbstractArray{<:Real})
 
-        return ur,vt
-    else 
-        for j in eachindex(theta)
-            ur[:,j] =  u[:,j] .* cos(deg2rad(theta[j])) + 
-                       v[:,j] .* sin(deg2rad(theta[j]))
-            vt[:,j] = -u[:,j] .* sin(deg2rad(theta[j])) + 
-                       v[:,j] .* cos(deg2rad(theta[j]))
-        end
-
-        return ur,vt
+    if size(u) != size(v)
+        error("Input u and v arrays must have same size")
     end
+    # Create the ur and vt arrayzs
+    ur = Array{Float64}(size(u))
+    vt = Array{Float64}(size(v))
+    # Convert u,v to ur,vt
+    if ndims(u) == 2
+        if size(u)[2] != length(theta)
+            error("Vector theta and second dimension of u,v arrays must be 
+                   of same length")
+        end
+        for j in eachindex(theta)
+            ur[:,j] =  u[:,j] .* cos.(deg2rad.(theta[j])) + 
+                       v[:,j] .* sin.(deg2rad.(theta[j]))
+            vt[:,j] = -u[:,j] .* sin.(deg2rad.(theta[j])) + 
+                       v[:,j] .* cos.(deg2rad.(theta[j]))
+        end
+
+        return ur,vt
+    elseif ndims(u) == 3 
+        if size(u)[2] != length(theta)
+            error("Vector theta and second dimension of u,v arrays must be 
+                   of same length")
+        end 
+        for j in eachindex(theta)
+            ur[:,j,:] =  u[:,j,:] .* cos.(deg2rad.(theta[j])) + 
+                         v[:,j,:] .* sin.(deg2rad.(theta[j]))
+            vt[:,j,:] = -u[:,j,:] .* sin.(deg2rad.(theta[j])) + 
+                         v[:,j,:] .* cos.(deg2rad.(theta[j]))
+        end
+
+        return ur,vt
+    end 
 end
 
 #==============================================================================
@@ -136,7 +155,7 @@ retained when using the medium-threshold editing script)
 Example of how to use the function
 ==================================
 
-    filein = "/Users/jmart23/TCI/Patricia/noaa_flight_level/20151023I1/20151023I1.sec";
+    filein = "20151023I1.sec" # One-second flight level data
     
     fl_time,fl_lon,fl_lat,foreR_lon,foreR_lat,foreL_lon,foreL_lat,
     aftR_lon,aftR_lat,aftL_lon,aftL_lat = p3swploc(filein);
@@ -151,20 +170,20 @@ Example of how to use the function
 
     # Plot the analysis and overlay the swp locations for the specified time
     
-    plt.contourf(lon,lat,v[:,:,9]',levels=collect(-80:10:80),
+    PyPlot.contourf(lon,lat,v[:,:,9]',levels=collect(-80:10:80),
                  cmap="radar_carbone2",extend="both")
-    plt.colorbar()
+    PyPlot.colorbar()
     
-    plt.plot(fl_lon[p3ind],fl_lat[p3ind],color="k",markersize=4)
-    plt.plot([fl_lon[p3ind],foreR_lon[p3ind]],[fl_lat[p3ind],foreR_lat[p3ind]],
+    PyPlot.plot(fl_lon[p3ind],fl_lat[p3ind],color="k",markersize=4)
+    PyPlot.plot([fl_lon[p3ind],foreR_lon[p3ind]],[fl_lat[p3ind],foreR_lat[p3ind]],
              color="C0",linewidth=2)
-    plt.plot([fl_lon[p3ind],foreL_lon[p3ind]],[fl_lat[p3ind],foreL_lat[p3ind]],
+    PyPlot.plot([fl_lon[p3ind],foreL_lon[p3ind]],[fl_lat[p3ind],foreL_lat[p3ind]],
              color="C0",linewidth=2)
-    plt.plot([fl_lon[p3ind],aftR_lon[p3ind]],[fl_lat[p3ind],aftR_lat[p3ind]],
+    PyPlot.plot([fl_lon[p3ind],aftR_lon[p3ind]],[fl_lat[p3ind],aftR_lat[p3ind]],
              color="C1",linewidth=2)
-    plt.plot([fl_lon[p3ind],aftL_lon[p3ind]],[fl_lat[p3ind],aftL_lat[p3ind]]
+    PyPlot.plot([fl_lon[p3ind],aftL_lon[p3ind]],[fl_lat[p3ind],aftL_lat[p3ind]]
              ,color="C1",linewidth=2)
-    plt.scatter(fl_lon[p3ind],fl_lat[p3ind],color="k",linewidth=4,zorder=10)
+    PyPlot.scatter(fl_lon[p3ind],fl_lat[p3ind],color="k",linewidth=4,zorder=10)
 
 ==============================================================================#
 
@@ -204,21 +223,21 @@ function p3swploc(filein::AbstractString)
     aftLdeg  = (aftL - 90.0) .* -1.0
     # Determine the x- and y-distances from the location of aircraft
     # out to 67 km (range of data in sweep files)
-    foreR_xdist = 67.0 .* cos(deg2rad(foreRdeg))
-    foreR_ydist = 67.0 .* sin(deg2rad(foreRdeg)) 
-    foreL_xdist = 67.0 .* cos(deg2rad(foreLdeg))
-    foreL_ydist = 67.0 .* sin(deg2rad(foreLdeg)) 
-    aftR_xdist = 67.0 .* cos(deg2rad(aftRdeg))
-    aftR_ydist = 67.0 .* sin(deg2rad(aftRdeg)) 
-    aftL_xdist = 67.0 .* cos(deg2rad(aftLdeg))
-    aftL_ydist = 67.0 .* sin(deg2rad(aftLdeg))
+    foreR_xdist = 67.0 .* cos.(deg2rad.(foreRdeg))
+    foreR_ydist = 67.0 .* sin.(deg2rad.(foreRdeg)) 
+    foreL_xdist = 67.0 .* cos.(deg2rad.(foreLdeg))
+    foreL_ydist = 67.0 .* sin.(deg2rad.(foreLdeg)) 
+    aftR_xdist = 67.0 .* cos.(deg2rad.(aftRdeg))
+    aftR_ydist = 67.0 .* sin.(deg2rad.(aftRdeg)) 
+    aftL_xdist = 67.0 .* cos.(deg2rad.(aftLdeg))
+    aftL_ydist = 67.0 .* sin.(deg2rad.(aftLdeg))
     # Determine the distance of 1 deg lat and lon at the aircraft location
     # ** In units of km
-    fl_latrad = deg2rad(fl_lat);
-    fac_lat = 111.13209 - 0.56605 .* cos(2.0 .* fl_latrad)
-        + 0.00012 .* cos(4.0 .* fl_latrad) - 0.000002 .* cos(6.0 .* fl_latrad)
-    fac_lon = 111.41513 .* cos(fl_latrad)
-        - 0.09455 .* cos(3.0 .* fl_latrad) + 0.00012 .* cos(5.0 .* fl_latrad)
+    fl_latrad = deg2rad.(fl_lat);
+    fac_lat = 111.13209 - 0.56605 .* cos.(2.0 .* fl_latrad)
+        + 0.00012 .* cos.(4.0 .* fl_latrad) - 0.000002 .* cos.(6.0 .* fl_latrad)
+    fac_lon = 111.41513 .* cos.(fl_latrad)
+        - 0.09455 .* cos.(3.0 .* fl_latrad) + 0.00012 .* cos.(5.0 .* fl_latrad)
     # Take the x- and y-distances and convert them to a lat and lon 
     # position relative to the aircraft location
     foreR_lon = (foreR_xdist ./ fac_lon) + fl_lon
