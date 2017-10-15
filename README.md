@@ -4,7 +4,7 @@
 
 Functions developed to analyze gridded meteorological data and model output. 
 
-Julia versions tested: 0.5.2 
+Operating Julia version: 0.6.0
 
 ## Package dependencies 
 
@@ -12,7 +12,6 @@ The following packages should be installed prior to using JuliaMet:
 
 * [NetCDF](https://github.com/JuliaGeo/NetCDF.jl)
 * [DataStructures](https://github.com/JuliaCollections/DataStructures.jl)
-* [Grid](https://github.com/timholy/Grid.jl)
 * [Interpolations](https://github.com/JuliaMath/Interpolations.jl)
 * [Colors](https://github.com/JuliaGraphics/Colors.jl)
 * [PyPlot](https://github.com/JuliaPy/PyPlot.jl)
@@ -54,34 +53,40 @@ module by adding the following to the beginning of our code:
 using JuliaMet
 ```
 
-## Functions
+## Utility
+
+### center_finding.jl
+* Functions to determine the center of a tropical cyclone 
+
+### cmaps.jl
+* Access and create ColorMaps in Julia 
+
+### cyclone.jl 
+* Functions to compute relevant quantities from tropical cyclone data
+
+### derivative.jl 
+* Numerical methods for computing derivatives using finite differencing
+
+### integrate.jl
+* Numerical methods for integrating discretized data using the closed Newtown-Cotes formulae
+
+### nanstats.jl 
+* Redefined statistical functions in Julia that handle the presence of NaNs
 
 ### nc_tools.jl 
 * Extensive NetCDF data reading function (NetCDF writing function in progress)
 
-### derivative.jl 
-* Functions to aid in numerical analyses (e.g., derivatives, means, etc.)
-
-### integrate.jl
-* Various integration methods for discretized data
-
 ### regrid.jl 
-* Interpolate functions using the deprecated CoordInterpGrid.jl package 
-
-### new_regrid.jl 
-* Interpolate functions using the new Interpolations.jl package
-
-### cyclone.jl 
-* Functions to calculate relevant quantities with tropical cyclone data
-
-### steady_frame.jl
-* Functions used to compute the most steady frame of reference given Doppler velocity observations
-
-### colormaps.jl 
-* Access and create colorbars in Julia
+* Regridding functions using the Interpolations.jl package
 
 ### samurai_obslocs.jl 
 * Determine the spatial location of data input into SAMURAI
 
+### steady_frame.jl
+* Functions used to compute the most steady frame of reference given Doppler velocity observations
 
 
+Disclaimer: The functions included in JuliaMet have largely been tested by myself and therefore may contain bugs.
+Users are encouraged to examine the source code prior to using any function in JuliaMet.
+Please contribute if you find bugs, find a more efficient way of doing something, or if you have your own functions!
+Documentation coming soon.
