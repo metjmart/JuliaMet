@@ -3,16 +3,15 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
-# This script contains a set of functions to integrate in different dimensions 
-# using the trapezoidal method.
+# This script contains a set of functions for integrating discretized data
 #
 # Function list:
 # newton_cotes
-# trapz_1d
-# trapz_2d
-# trapz_3d
+# trapz1d
+# trapz2d
+# trapz3d
 # *****************************************************************************
 
 #==============================================================================
@@ -45,16 +44,14 @@ Methods
 
 ==============================================================================#
 
-function newton_cotes{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
-                                         y::AbstractVector{Tb},
-                                         method::Symbol=:trapz)
-    len::Int = length(y)
-    if (len != length(x))
+function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                      method::Symbol=:trapz)
+
+    if length(y) != length(x)
        error("Vectors x and y must be of same length")
     end
     n::Int = length(y)-1
     sum = 0.0
-
     if method == :trapz
         if n < 2
             error("Must have at least one sub-interval for integration")
@@ -65,8 +62,7 @@ function newton_cotes{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
             end
         end
 
-    return sum/2.0
-
+        return sum/2.0
     elseif method == :simps13
         if !iseven(n)
             error("Number of sub-intervals must be even")
@@ -79,7 +75,6 @@ function newton_cotes{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
         end
     
         return sum/6.0
-
     elseif method == :simps38
         if n % 3 != 0
             error("Number of sub-intervals must be a multiple of 3")
@@ -92,7 +87,6 @@ function newton_cotes{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
         end  
 
         return sum/8.0 
-
     elseif method == :boole
         if n % 4 != 0 
             error("Number of sub-intervals must be a multiple of 4")
@@ -106,13 +100,11 @@ function newton_cotes{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
         end
     
         return sum/90.0
-
     end
-
 end
 
 #==============================================================================
-trapz_1d
+trapz1d
 
 Trapezoidal integration of a 1D radial or Cartesian grid 
 See https://en.wikipedia.org/wiki/Trapezoidal_rule 
@@ -122,10 +114,9 @@ x = vector for x-dimension
 y = dependent variable to be integrated (vector with same size as x)
 ==============================================================================#
 
-function trapz_1d{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
-                                     y::AbstractVector{Tb})
-    len::Int = length(y)
-    if (len != length(x))
+function trapz1d(x::AbstractVector{<:Real},y::AbstractVector{<:Real})
+
+    if length(y) != length(x)
         error("Vectors must be of same length")
     end    
     sum = 0.0
@@ -139,7 +130,7 @@ function trapz_1d{Ta<:Real,Tb<:Real}(x::AbstractVector{Ta},
 end
 
 #==============================================================================
-trapz_2d
+trapz2d
 
 Trapezoidal integration of a 2D Cartesian grid 
 ** Assumes x and y are in units of meters
@@ -149,23 +140,28 @@ y   = vector for y-dimension
 var = dependent variable with size [x,y]
 ==============================================================================#
 
-function trapz_2d{Ta<:Real,Tb<:Real,Tc<:Real}(x::AbstractVector{Ta},
-                                              y::AbstractVector{Tb},
-                                              var::AbstractArray{Tc,2})
+function trapz2d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                 var::AbstractArray{<:Real,2})
+
+    # Define the dimensions of the input variable
+    d1,d2 = size(var)
+    if d1 != length(x) || d2 != length(y)
+        error("Input variable to be integrated must have dimensions of [x,y]")
+    end 
     int1 = similar(x,Float64)
     fill!(int1, NaN)
     # Integrate along y-axis 
     for i in eachindex(x)
-        int1[i] = trapz_1d(y,var[i,:])
+        int1[i] = trapz1d(y,var[i,:])
     end
     # Integrate along x-axis
-    int2 = trapz_1d(x,int1)
+    int2 = trapz1d(x,int1)
 
     return int2            
 end
 
 #==============================================================================
-trapz_3d
+trapz3d
 
 Trapezoidal integration of a 3D Cartesian grid 
 ** Assumes x, y, and z are in units of meters
@@ -176,26 +172,29 @@ z   = vector for z-dimension
 var = dependent variable with size [x,y,z]
 ==============================================================================#
 
-function trapz_3d{Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}(x::AbstractVector{Ta},
-                                                       y::AbstractVector{Tb},
-                                                       z::AbstractVector{Tc},
-                                                       var::AbstractArray{Td,3})
-    int1 = Array(Float64,length(x),length(y)) 
+function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                 z::AbstractVector{<:Real},var::AbstractArray{<:Real,3})
+
+    # Define the dimensions of the input variable
+    d1,d2,d3 = size(var)
+    if d1 ! = length(x) || d2 != length(y) || d3 != length(z)
+        error("Input variable to be integrated must have dimensions of [x,y,z]")
+    end 
+    int1 = Array{Float64}(length(x),length(y)) 
     fill!(int1, NaN)
     int2 = similar(x)
     fill!(int2, NaN)
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            int1[i,j] = trapz_1d(z,var[i,j,:])
+            int1[i,j] = trapz1d(z,var[i,j,:])
         end
         # Integrate along y-axis
-        int2[i] = trapz_1d(y,int1[i,:])
+        int2[i] = trapz1d(y,int1[i,:])
     end
     # Integrate along x-axis
-    int3 = trapz_1d(x,int2)
+    int3 = trapz1d(x,int2)
+
     return int3            
 end
-
-
 
