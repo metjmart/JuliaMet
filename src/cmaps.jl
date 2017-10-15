@@ -3,7 +3,7 @@
 #
 # Author: Jonathan Martinez 
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.5.2
+# Julia version: 0.6.0
 #
 # -- Adapted/updated from a previous version by Annette Foerster --
 #
@@ -12,40 +12,71 @@
 # *****************************************************************************
 
 function create_colormap(colorCodes::Array,mapname)
+
     dim1 = length(colorCodes)
     rs  = (Float64,Float64,Float64)[]
     gs  = (Float64,Float64,Float64)[]
     bs  = (Float64,Float64,Float64)[]
-
     for i in [1:1:dim1]
         push!(rs,((i-1)/(dim1-1),Colors.color(colorCodes[i]).r,Colors.color(colorCodes[i]).r))
         push!(gs,((i-1)/(dim1-1),Colors.color(colorCodes[i]).g,Colors.color(colorCodes[i]).g))
         push!(bs,((i-1)/(dim1-1),Colors.color(colorCodes[i]).b,Colors.color(colorCodes[i]).b))
     end
-
     cmap = plt.ColorMap(mapname,rs,gs,bs,dim1,1.0)
-
     plt.register_cmap(mapname, cmap)
+
     return true
 end
 
 function create_colormap(reds::Array,greens::Array,blues::Array,mapname)
+
     dim1 = length(reds)
     rs  = (Float64,Float64,Float64)[]
     gs  = (Float64,Float64,Float64)[]
     bs  = (Float64,Float64,Float64)[]
-
     for i in [1:1:dim1]
         push!(rs,((i-1)/(dim1-1),reds[i]/255,reds[i]/255))
         push!(gs,((i-1)/(dim1-1),greens[i]/255,greens[i]/255))
         push!(bs,((i-1)/(dim1-1),blues[i]/255,blues[i]/255))
     end
-
     cmap = plt.ColorMap(mapname,rs,gs,bs,dim1,1.0)
-
     plt.register_cmap(mapname, cmap)
+
     return true
 end
+
+#==============================================================================
+# Extract the rgb values from the format that colormaps are stored in
+==============================================================================#
+
+function get_rgbs(r_in,g_in,b_in)
+
+    dim1 = length(r_in)
+    rgb_out = Array[]
+    for i in [1:1:dim1]
+        push!(rgb_out,[r_in[i][2],g_in[i][2],b_in[i][2]])
+    end
+
+    return rgb_out
+end
+
+#==============================================================================
+# Use the colors of the colormap to color the lines of your lineplot
+==============================================================================#
+
+function make_line_colors(colors_in,nrOfColors::Number)
+
+    colors_out = typeof(colors_in[1])[]
+    repeat = ceil(nrOfColors/size(colors_in)[1])
+    for i in [1:1:size(colors_in)[1]]
+        for m in [1:1:repeat]
+            push!(colors_out,colors_in[i])
+        end
+    end
+
+    return colors_out
+end
+
 
 #==============================================================================
 extract_rgbs
@@ -60,15 +91,12 @@ inc - number of increments (i.e., number of RGB triplets)
 function extract_rgbs(cbar_name::AbstractString,inc::Real)
 
     julia_cmap = matplotlib[:cm][:get_cmap](cbar_name)
-    num_colors = Array(Float64,length(1:inc))
-
+    num_colors = Array{Float64}(length:inc)
     for i in eachindex(num_colors)
         num_colors[i] = i/inc
     end
-
     rgbs = []
     rgb_vals = []
-
     for i in eachindex(num_colors)
         push!(rgbs,julia_cmap(num_colors[i]))
         push!(rgb_vals,collect(rgbs[i][1:3]))
@@ -76,35 +104,6 @@ function extract_rgbs(cbar_name::AbstractString,inc::Real)
     end
 
     return rgb_vals
-
-end
-
-#==============================================================================
-# Extract the rgb values from the format that colormaps are stored in
-==============================================================================#
-
-function get_rgbs(r_in,g_in,b_in)
-    dim1 = length(r_in)
-    rgb_out = Array[]
-    for i in [1:1:dim1]
-        push!(rgb_out,[r_in[i][2],g_in[i][2],b_in[i][2]])
-    end
-    return rgb_out
-end
-
-#==============================================================================
-# Use the colors of the colormap to color the lines of your lineplot
-==============================================================================#
-
-function make_line_colors(colors_in,nrOfColors::Number)
-    colors_out = typeof(colors_in[1])[]
-    repeat = ceil(nrOfColors/size(colors_in)[1])
-    for i in [1:1:size(colors_in)[1]]
-        for m in [1:1:repeat]
-            push!(colors_out,colors_in[i])
-        end
-    end
-    return colors_out
 end
 
 #==============================================================================
