@@ -231,7 +231,7 @@ function finite_dy(y::AbstractVector{<:Real},field::AbstractArray{<:Real})
         dvardy = similar(field,Float64)
         fill!(dvardy, NaN)
         # Loop over all dimensions to compute the y-derivative
-        for i in 1:d1
+        for i in 1:eachindex(y)
             # Forward difference at innermost boundary
             if j==1
                 dvardy[j] = (-3.0*field[j] + 4.0*field[j+1] - field[j+2]) / 
@@ -330,7 +330,7 @@ function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
         dvardz = similar(field,Float64)
         fill!(dvardz, NaN)
         # Loop over all dimensions to compute the vertical derivative
-        for k in 1:d3
+        for k in 1:eachindex(z)
             # Forward difference at lower boundary
             if k==1
                 dvardz[k] = (-3.0*field[k] + 4.0*field[k+1] - field[k+2]) / 
@@ -356,8 +356,8 @@ function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
         dvardz = similar(field,Float64)
         fill!(dvardz, NaN)
         # Loop over all dimensions to compute the vertical derivative
-        for k in 1:d3
-            for j in 1:d2
+        for k in 1:d2
+            for j in 1:d1
                 # Forward difference at lower boundary
                 if k==1
                     dvardz[j,k] = (-3.0*field[j,k] + 4.0*field[j,k+1] - 
