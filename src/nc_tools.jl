@@ -51,11 +51,11 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 elseif typeof(fillval) == Void && typeof(missval) != Void
                     vardata[findin(vardata,missval)] = NaN
                 end
-                println("Succesfully read in " * varnames * "!")
+                println("Succesfully read in " * varnames[1] * "!")
                 return vardata
             else
                 # If no masking, just return vardata
-                println("Succesfully read in " * varnames * "!")
+                println("Succesfully read in " * varnames[1] * "!")
                 return vardata
             end
         # If not 1-d, determine if vardata has a single-dimension
