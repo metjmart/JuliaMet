@@ -46,7 +46,7 @@ function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
             pminy = y[findin(y,yy[min_ind])[1]]
             # Compute pp as p - p_env
             r,theta,prs_rtz = regrid_xy2rt(pminx,pminy,x,y,prs[:,:,k],true)
-            azmean_p = calc_azmean(r,z,prs_rtz)
+            azmean_p = azmean(r,z,prs_rtz)
             # p_env is azimuthally averaged p at r = 500 km
             r500 = closest_ind(r,500)
             p_env = azmean_p[r500]
@@ -79,7 +79,7 @@ function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     # Convert u,v at 2 km to ur,vt
     ur,vt = uv2urvt(theta,u_rtz,v_rtz)
     # Compute the azimuthal mean tangential wind
-    azmean_vt = calc_azmean(r,z,vt)
+    azmean_vt = azmean(r,z,vt)
     # Compute the RMW and 2R80
     vtmax = findmax(azmean_vt)
     rmw = r[vtmax[2]]
