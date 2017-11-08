@@ -10,7 +10,7 @@ module JuliaMet
     export nanmax, nanmin, nanextrema, nansum, nanmean, nanmedian, nanvar, 
            nanstd
     export read_ncvars
-    export closest_ind, grid2d, grid3d, regrid_xy2rt, regrid_xyz2rtz, 
+    export closest_ind, grid2d, grid3d, xy2rt, regrid_xy2rt, regrid_xyz2rtz, 
            regrid_gfrelxz, regrid_gfrel_xyz
     export obslocs_rtz
     export stationary_frame

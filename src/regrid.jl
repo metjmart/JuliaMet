@@ -11,6 +11,7 @@
 # closest_ind
 # grid2d
 # grid3d
+# xy2rt
 # regrid_xy2rt 
 # regrid_xyz2rtz
 # regrid_gfrelxz
@@ -88,6 +89,40 @@ function grid3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
 end
 
 #==============================================================================
+xy2rt
+
+This function will convert x and y arrays to radius and theta arrays given the 
+center of a TC. See center_finding.jl for methods to determine the center.
+The purpose of requiring the center is if there is stretching in the domain,
+this will use the x and y grid spacing nearest to the center (i.e., without 
+stretching). 
+==============================================================================#
+
+function xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
+               y::AbstractVector{<:Real})
+
+    # Re-define x and y arrays based on specified center
+    xn = x - cx
+    yn = y - cy
+    # Pinpoint the center of grid that has no stretching
+    # Has no impact on grids with constant spacing
+    x0 = closest_ind(x,0.0)
+    y0 = closest_ind(y,0.0)
+    # Determine the max radius of polar coordinate grid and the theta increment
+    rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
+    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
+    if theta_inc<1.0
+        theta_inc=1.0
+    end
+    # Define r and theta
+    r = collect(0:(x[x0]-x[x0-1]):rmax)
+    theta = collect(0:theta_inc:360-theta_inc)
+
+    return r,theta
+
+end
+
+#==============================================================================
 # regrid_xy2rt
 
 This function takes two-dimensional Cartesian data and interpolates it to a 
@@ -108,16 +143,16 @@ function regrid_xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
     yn = y - cy
     # Pinpoint the center of grid that has no stretching
     # Has no impact on grids with constant spacing
-    x0 = closest_ind(xn,0.0)
-    y0 = closest_ind(yn,0.0)
+    x0 = closest_ind(x,0.0)
+    y0 = closest_ind(y,0.0)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt((maximum(abs.(xn)))^2 + (maximum(abs.(yn))^2)))
-    theta_inc = floor(atan2(yn[y0]-yn[y0-1],maximum(abs.(xn)))/pi*180.0)
+    rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
+    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
     # Define r and theta
-    r = collect(0:(xn[x0]-xn[x0-1]):rmax)
+    r = collect(0:(x[x0]-x[x0-1]):rmax)
     theta = collect(0:theta_inc:360-theta_inc)
     # Create two-dimensional arrays for r and theta components of the polar grid
     # Define the Cartesian points in terms of the 2-d polar coordinates
@@ -158,16 +193,16 @@ function regrid_xyz2rtz(cx::Real,cy::Real,x::AbstractVector{<:Real},
     yn = y - cy
     # Pinpoint the center of grid that has no stretching
     # Has no impact on grids with constant spacing
-    x0 = closest_ind(xn,0.0)
-    y0 = closest_ind(yn,0.0)
+    x0 = closest_ind(x,0.0)
+    y0 = closest_ind(y,0.0)
     # Determine the max radius of polar coordinate grid and the theta increment
-    rmax = ceil(sqrt((maximum(abs.(xn)))^2 + (maximum(abs.(yn))^2)))
-    theta_inc = floor(atan2(yn[y0]-yn[y0-1],maximum(abs.(xn)))/pi*180.0)
+    rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
+    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
     if theta_inc<1.0
         theta_inc=1.0
     end
     # Define r and theta
-    r = collect(0:(xn[x0]-xn[x0-1]):rmax)
+    r = collect(0:(x[x0]-x[x0-1]):rmax)
     theta = collect(0:theta_inc:360-theta_inc)
     # Define the dimensions of the new var
     field_rtz = Array{Float64}(length(r),length(theta),length(z))
