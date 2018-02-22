@@ -11,6 +11,8 @@
 # calc_rmw
 # azmean
 # uv2urvt
+# rankine
+# hermite
 # p3swploc
 # *****************************************************************************
 
@@ -53,7 +55,7 @@ end
 azmean
 
 Compute the azimuthal mean of the input variable. 
-Input variable can be 2-D (r,theta) or 3-D (r,theta,z)
+Input variable can be 2-D (r,phi) or 3-D (r,phi,z)
 ** Be sure to use the nanmean function since NaNs may be present
 ==============================================================================#
 
@@ -70,13 +72,13 @@ function azmean(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
         fill!(azmean_var, NaN)
         # Calculate the azimuthal mean 
         for i in eachindex(r)
-                azmean_var[i] = nanmean(var[i,:])
+            azmean_var[i] = nanmean(var[i,:])
         end
         
         return azmean_var
     elseif ndims(var) == 3
         if size(var)[1] != length(r) || size(var)[3] != length(z)
-            error("Input variable must have dimensions of (radius,theta,z)")
+            error("Input variable must have dimensions of (radius,phi,z)")
         end 
         # Define an array for the azimuthal mean
         azmean_var = Array{Float64}(length(r),length(z)) 
@@ -96,11 +98,11 @@ end
 uv2urvt
 
 Convert u (east-west) and v (north-south) winds to radial and tangential winds
-Input u and v can either be 2-D (r,theta) or 3-D (r,theta,z)
-** Input theta vector assumed to be in units of degrees
+Input u and v can either be 2-D (r,phi) or 3-D (r,phi,z)
+** Input phi vector assumed to be in units of radians
 ==============================================================================#
 
-function uv2urvt(theta::AbstractVector{<:Real},u::AbstractArray{<:Real},
+function uv2urvt(phi::AbstractVector{<:Real},u::AbstractArray{<:Real},
                  v::AbstractArray{<:Real})
 
     if size(u) != size(v)
@@ -111,32 +113,66 @@ function uv2urvt(theta::AbstractVector{<:Real},u::AbstractArray{<:Real},
     vt = Array{Float64}(size(v))
     # Convert u,v to ur,vt
     if ndims(u) == 2
-        if size(u)[2] != length(theta)
-            error("Vector theta and second dimension of u,v arrays must be 
+        if size(u)[2] != length(phi)
+            error("Vector phi and second dimension of u,v arrays must be 
                    of same length")
         end
-        for j in eachindex(theta)
-            ur[:,j] =  u[:,j] .* cos.(deg2rad.(theta[j])) + 
-                       v[:,j] .* sin.(deg2rad.(theta[j]))
-            vt[:,j] = -u[:,j] .* sin.(deg2rad.(theta[j])) + 
-                       v[:,j] .* cos.(deg2rad.(theta[j]))
+        for j in eachindex(phi)
+            ur[:,j] =  u[:,j] .* cos.(phi[j]) + v[:,j] .* sin.(phi[j])
+            vt[:,j] = -u[:,j] .* sin.(phi[j]) + v[:,j] .* cos.(phi[j])
         end
 
         return ur,vt
     elseif ndims(u) == 3 
-        if size(u)[2] != length(theta)
-            error("Vector theta and second dimension of u,v arrays must be 
+        if size(u)[2] != length(phi)
+            error("Vector phi and second dimension of u,v arrays must be 
                    of same length")
         end 
-        for j in eachindex(theta)
-            ur[:,j,:] =  u[:,j,:] .* cos.(deg2rad.(theta[j])) + 
-                         v[:,j,:] .* sin.(deg2rad.(theta[j]))
-            vt[:,j,:] = -u[:,j,:] .* sin.(deg2rad.(theta[j])) + 
-                         v[:,j,:] .* cos.(deg2rad.(theta[j]))
+        for j in eachindex(phi)
+            ur[:,j,:] =  u[:,j,:] .* cos.(phi[j]) + v[:,j,:] .* sin.(phi[j])
+            vt[:,j,:] = -u[:,j,:] .* sin.(phi[j]) + v[:,j,:] .* cos.(phi[j])
         end
 
         return ur,vt
     end 
+end
+
+#==============================================================================
+rankine
+
+This function will generate a 2-D Rankine vortex in polar coordinates for a 
+given rmax, vmax, and 2-D radius array.
+Input rr should be a 2-D array with dimensions of (r,phi)
+*** Assumes rmax and rr are in units of meters and vmax is m/s!!!
+===============================================================================#
+
+function rankine(rmax::Real,vmax::Real,rr::AbstractArray{<:Real,2},
+                 method::Symbol=:vt)
+
+    if method == :vt
+        vt = Array{Float64}(size(rr))
+        vt[rr .< rmax] = vmax .* rr[rr .< rmax] ./ rmax
+        vt[rr .>= rmax] = vmax .* rmax ./ rr[rr .>= rmax]
+        return vt
+    elseif method == :vort
+        vort = Array{Float64}(size(rr))
+        vort[rr .< rmax] = 2 * vmax / rmax
+        vort[rr .>= rmax] = 0
+        return vort
+    end
+end
+
+#==============================================================================
+hermite
+
+Basic cubic Hermite shape function satisfying S(0) = 1, S(1) = 0, and 
+S'(0) = S'(1) = 0.
+Can be used to provide smooth transition regions for, e.g., vorticity rings.
+See Schubert et al. (1999; JAS) for examples
+===============================================================================#
+
+function hermite(radius::Real)
+    return 1. - 3. * radius^2 + 2 * radius^3
 end
 
 #==============================================================================
