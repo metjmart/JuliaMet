@@ -4,14 +4,14 @@ module JuliaMet
 
     export p_centroid
     export extract_rgbs, create_cmap
-    export calc_rmw, azmean, uv2urvt, p3swploc
+    export calc_rmw, azmean, uv2urvt, rankine, hermite, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian
     export newton_cotes, trapz1d, trapz2d, trapz3d
     export nanmax, nanmin, nanextrema, nansum, nanmean, nanmedian, nanvar, 
            nanstd
     export read_ncvars
     export closest_ind, grid2d, grid3d, xy2rt, regrid_xy2rt, regrid_xyz2rtz, 
-           regrid_gfrelxz, regrid_gfrel_xyz
+           regrid_pol2cart, regrid_gfrelxz, regrid_gfrel_xyz
     export obslocs_rtz
     export stationary_frame
 
