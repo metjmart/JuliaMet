@@ -36,7 +36,7 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
     # Determine if one or more vars needs to be read in
     # One var
     if length(varnames) == 1
-        println("Reading in " * varnames[1] * " ...")
+        #println("Reading in " * varnames[1] * " ...")
         vardata = ncread(ncfile, varnames[1])
         if ndims(vardata) == 1
             # Determine if values need to be masked
@@ -51,11 +51,11 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 elseif typeof(fillval) == Void && typeof(missval) != Void
                     vardata[findin(vardata,missval)] = NaN
                 end
-                println("Succesfully read in " * varnames[1] * "!")
+                #println("Succesfully read in " * varnames[1] * "!")
                 return vardata
             else
                 # If no masking, just return vardata
-                println("Succesfully read in " * varnames[1] * "!")
+                #println("Succesfully read in " * varnames[1] * "!")
                 return vardata
             end
         # If not 1-d, determine if vardata has a single-dimension
@@ -78,11 +78,11 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 elseif typeof(fillval) == Void && typeof(missval) != Void
                     vardata[findin(vardata,missval)] = NaN
                 end
-                println("Successfully read in " * varnames[1] * "!")
+                #println("Successfully read in " * varnames[1] * "!")
                 return vardata
             else
                 # If no masking, just return svardata
-                println("Successfully read in " * varnames[1] * "!")
+                #println("Successfully read in " * varnames[1] * "!")
                 return vardata
             end
         end 
@@ -92,7 +92,7 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
         varsdata = OrderedDict()
         svarsdata = OrderedDict()
         for var in varnames
-            println("Reading in " * var * " ...")
+            #println("Reading in " * var * " ...")
             varsdata[var] = ncread(ncfile,var)
             # Create a second variable to overwrite data that is squeezed
             svarsdata[var] = ncread(ncfile,var)
@@ -129,12 +129,12 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
         # Determine varsdata output type: Values or OrderedDict 
         if dict_opt == true
             for var in varnames
-                println("Successfully read in " * var * "!")
+                #println("Successfully read in " * var * "!")
             end
             return svarsdata
         else
             for var in varnames
-                println("Successfully read in " * var * "!")
+                #println("Successfully read in " * var * "!")
             end 
             return collect(values(svarsdata))
         end
