@@ -9,7 +9,6 @@
 #
 # Function list:
 # newton_cotes
-# trapz1d
 # trapz2d
 # trapz3d
 # *****************************************************************************
@@ -66,7 +65,7 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     elseif method == :simps13
         if !iseven(n)
             error("Number of sub-intervals must be even")
-        elseif any(isnan(y))
+        elseif any(isnan.(y))
             error("NaNs are currently not handled in Simpson's 1/3 rule, 
                    consider using the trapezoidal rule")
         end
@@ -78,7 +77,7 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     elseif method == :simps38
         if n % 3 != 0
             error("Number of sub-intervals must be a multiple of 3")
-        elseif any(isnan(y))
+        elseif any(isnan.(y))
             error("NaNs are currently not handled in Simpson's 3/8 rule, 
                    consider using the trapezoidal rule")
         end 
@@ -90,7 +89,7 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     elseif method == :boole
         if n % 4 != 0 
             error("Number of sub-intervals must be a multiple of 4")
-        elseif any(isnan(y))
+        elseif any(isnan.(y))
             error("NaNs are currently not handled in Boole's rule, 
                    consider using the trapezoidal rule")
         end  
@@ -101,32 +100,6 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     
         return sum/90.0
     end
-end
-
-#==============================================================================
-trapz1d
-
-Trapezoidal integration of a 1D radial or Cartesian grid 
-See https://en.wikipedia.org/wiki/Trapezoidal_rule 
-** Assumes that x is in units of meters
-Required input:
-x = vector for x-dimension
-y = dependent variable to be integrated (vector with same size as x)
-==============================================================================#
-
-function trapz1d(x::AbstractVector{<:Real},y::AbstractVector{<:Real})
-
-    if length(y) != length(x)
-        error("Vectors must be of same length")
-    end    
-    sum = 0.0
-    for i in 2:length(x)
-        if !isnan(y[i]) && !isnan(y[i-1])
-            sum += (x[i] - x[i-1]) * (y[i] + y[i-1])
-        end
-    end
-    
-    return sum/2.0
 end
 
 #==============================================================================
@@ -152,10 +125,10 @@ function trapz2d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     fill!(int1, NaN)
     # Integrate along y-axis 
     for i in eachindex(x)
-        int1[i] = trapz1d(y,var[i,:])
+        int1[i] = newton_cotes(y,var[i,:])
     end
     # Integrate along x-axis
-    int2 = trapz1d(x,int1)
+    int2 = newton_cotes(x,int1)
 
     return int2            
 end
@@ -187,13 +160,13 @@ function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            int1[i,j] = trapz1d(z,var[i,j,:])
+            int1[i,j] = newton_cotes(z,var[i,j,:])
         end
         # Integrate along y-axis
-        int2[i] = trapz1d(y,int1[i,:])
+        int2[i] = newton_cotes(y,int1[i,:])
     end
     # Integrate along x-axis
-    int3 = trapz1d(x,int2)
+    int3 = newton_cotes(x,int2)
 
     return int3            
 end
