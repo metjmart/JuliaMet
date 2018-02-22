@@ -132,7 +132,7 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
         end
         dvardx = similar(field,Float64)
         fill!(dvardx,NaN)
-        # Loop to compute radial derivative
+        # Loop to compute x-derivative
         for i in eachindex(x)
             # Forward difference at innermost boundary
             if i==1
@@ -158,7 +158,7 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
         end 
         dvardx = similar(field,Float64)
         fill!(dvardx, NaN)
-        # Loop over all dimensions to compute the radial derivative
+        # Loop over all dimensions to compute the x-derivative
         for j in 1:d2
             for i in 1:d1
                 # Forward difference at innermost boundary
@@ -186,7 +186,7 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
         end 
         dvardx = similar(field,Float64)
         fill!(dvardx, NaN)
-        # Loop over all dimensions to compute the radial derivative
+        # Loop over all dimensions to compute the x-derivative
         for k in 1:d3
             for j in 1:d2
                 for i in 1:d1
