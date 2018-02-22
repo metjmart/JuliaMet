@@ -11,12 +11,15 @@
 # closest_ind
 # grid2d
 # grid3d
-# xy2rt
-# regrid_xy2rt 
-# regrid_xyz2rtz
+# xy2rp
+# regrid_xy2rp 
+# regrid_xyz2rpz
+# regrid_pol2cart
 # regrid_gfrelxz
 # regrid_gfrelxyz
 # *****************************************************************************
+
+# Search and replace: rt_out, field_rtz, anything rtz!
 
 #==============================================================================
 # closest_ind
@@ -89,16 +92,16 @@ function grid3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
 end
 
 #==============================================================================
-xy2rt
+xy2rp
 
-This function will convert x and y arrays to radius and theta arrays given the 
+This function will convert x and y arrays to radius and phi arrays given the 
 center of a TC. See center_finding.jl for methods to determine the center.
 The purpose of requiring the center is if there is stretching in the domain,
 this will use the x and y grid spacing nearest to the center (i.e., without 
 stretching). 
 ==============================================================================#
 
-function xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
+function xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
                y::AbstractVector{<:Real})
 
     # Re-define x and y arrays based on specified center
@@ -108,22 +111,22 @@ function xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
     # Has no impact on grids with constant spacing
     x0 = closest_ind(x,0.0)
     y0 = closest_ind(y,0.0)
-    # Determine the max radius of polar coordinate grid and the theta increment
+    # Determine the max radius of polar coordinate grid and the phi increment
     rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
-    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
-    if theta_inc<1.0
-        theta_inc=1.0
+    phi_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x))))
+    if phi_inc < pi/180
+        phi_inc = pi/180
     end
-    # Define r and theta
+    # Define r and phi
     r = collect(0:(x[x0]-x[x0-1]):rmax)
-    theta = collect(0:theta_inc:360-theta_inc)
+    phi = collect(0:phi_inc:2*pi - phi_inc)
 
-    return r,theta
+    return r,phi
 
 end
 
 #==============================================================================
-# regrid_xy2rt
+# regrid_xy2rp
 
 This function takes two-dimensional Cartesian data and interpolates it to a 
 polar coordinate grid. It is specifically designed to work with NetCDF data
@@ -131,12 +134,12 @@ by working around issues with fill values when interpolating the data.
 ** Follows http://mathworld.wolfram.com/PolarCoordinates.html for converting 
    Cartesian to polar coordinates
  
-rt_out - Option to output r and theta arrays. Default is false.
+rp_out - Option to output r and phi arrays. Default is false.
 ==============================================================================#
 
-function regrid_xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
+function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
                       y::AbstractVector{<:Real},var::AbstractArray{<:Real,2},
-                      rt_out::Bool=false)
+                      rp_out::Bool=false)
 
     # Re-define x and y arrays based on specified center
     xn = x - cx
@@ -145,48 +148,48 @@ function regrid_xy2rt(cx::Real,cy::Real,x::AbstractVector{<:Real},
     # Has no impact on grids with constant spacing
     x0 = closest_ind(x,0.0)
     y0 = closest_ind(y,0.0)
-    # Determine the max radius of polar coordinate grid and the theta increment
+    # Determine the max radius of polar coordinate grid and the phi increment
     rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
-    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
-    if theta_inc<1.0
-        theta_inc=1.0
+    phi_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x))))
+    if phi_inc < pi/180
+        phi_inc = pi/180
     end
-    # Define r and theta
+    # Define r and phi
     r = collect(0:(x[x0]-x[x0-1]):rmax)
-    theta = collect(0:theta_inc:360-theta_inc)
-    # Create two-dimensional arrays for r and theta components of the polar grid
+    phi = collect(0:phi_inc:2*pi - phi_inc)
+    # Create two-dimensional arrays for r and phi components of the polar grid
     # Define the Cartesian points in terms of the 2-d polar coordinates
-    r_2d,theta_2d = grid2d(r,theta)
-    x_polar = r_2d .* cos.(deg2rad.(theta_2d))
-    y_polar = r_2d .* sin.(deg2rad.(theta_2d))
+    r2d,phi2d = grid2d(r,phi)
+    x_polar = r2d .* cos.(phi2d)
+    y_polar = r2d .* sin.(phi2d)
     # Interpolate the data from the Cartesian grid to the polar grid 
-    field_rt = Array{Float64}(size(x_polar))
+    field_pt = Array{Float64}(size(x_polar))
     field_interp = extrapolate(interpolate((xn,yn), var, Gridded(Linear())), NaN)
     for i in eachindex(r)
-        for j in eachindex(theta)
-             field_rt[i,j] = field_interp[x_polar[i,j],y_polar[i,j]]
+        for j in eachindex(phi)
+             field_pt[i,j] = field_interp[x_polar[i,j],y_polar[i,j]]
         end
     end
-    # Return field_rt, r, and theta if rt_out is true
-    if rt_out == true
-        return r,theta,field_rt
+    # Return field_rp, r, and phi if rp_out is true
+    if rp_out == true
+        return r,phi,field_rp
     else
-        return field_rt
+        return field_rp
     end
 end
 
 #==============================================================================
-regrid_xyz2rtz
+regrid_xyz2rpz
 
-This function interpolates two-dimensional Cartesian data to a cylindrical 
-coordinate grid by executing regrid_xy2rt at each vertical level.
+This function interpolates three-dimensional Cartesian data to a cylindrical 
+coordinate grid by executing regrid_xy2rp at each vertical level.
 
-rt_out - Option to output r and theta arrays, default is false.
+rp_out - Option to output r and phi arrays, default is false.
 ==============================================================================#
 
-function regrid_xyz2rtz(cx::Real,cy::Real,x::AbstractVector{<:Real},
+function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{<:Real},
                         y::AbstractVector{<:Real},z::AbstractVector{<:Real},
-                        vardata::AbstractArray{<:Real,3},rt_out::Bool=false)
+                        vardata::AbstractArray{<:Real,3},rp_out::Bool=false)
 
     # Re-define x and y arrays based on specified center
     xn = x - cx
@@ -195,26 +198,63 @@ function regrid_xyz2rtz(cx::Real,cy::Real,x::AbstractVector{<:Real},
     # Has no impact on grids with constant spacing
     x0 = closest_ind(x,0.0)
     y0 = closest_ind(y,0.0)
-    # Determine the max radius of polar coordinate grid and the theta increment
+    # Determine the max radius of polar coordinate grid and the phi increment
     rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
-    theta_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x)))/pi*180.0)
-    if theta_inc<1.0
-        theta_inc=1.0
+    phi_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x))))
+    if phi_inc < pi/180
+        phi_inc = pi/180
     end
-    # Define r and theta
+    # Define r and phi
     r = collect(0:(x[x0]-x[x0-1]):rmax)
-    theta = collect(0:theta_inc:360-theta_inc)
+    phi = collect(0:phi_inc:2*pi - phi_inc)
     # Define the dimensions of the new var
-    field_rtz = Array{Float64}(length(r),length(theta),length(z))
-    # Call regridxy2rt at each vertical level 
+    field_rpz = Array{Float64}(length(r),length(phi),length(z))
+    # Call regridxy2rp at each vertical level 
     for k in eachindex(z)
-        field_rtz[:,:,k] = regrid_xy2rt(cx,cy,x,y,vardata[:,:,k])
+        field_rpz[:,:,k] = regrid_xy2rp(cx,cy,x,y,vardata[:,:,k])
     end
-    # Return field_rtz, r, and theta if rt_out is true
-    if rt_out == true
-        return r,theta,field_rtz
+    # Return field_rpz, r, and phi if rp_out is true
+    if rp_out == true
+        return r,phi,field_rpz
     else
-        return field_rtz
+        return field_rpz
+    end
+end
+
+#==============================================================================
+regrid_pol2cart
+
+This function will regrid data on a polar grid to Cartesian coordinates
+*** Assume data is centered on polar grid 
+*** Currently not handling presence of NaNs -- use caution!
+==============================================================================#
+
+function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
+                         var::AbstractArray{<:Real,2},xy_out::Bool=false)
+
+    # Create 2-D arrays for r,phi
+    rr,pp = grid2d(r,phi)
+    # Create x,y arrays based on radial grid spacing
+    xx,yy = grid2d(collect(-rr[end]:rr[2]-rr[1]:rr[end]),
+                   collect(-rr[end]:rr[2]-rr[1]:rr[end]))
+    # Transform Cartesian to polar reference points
+    rr_cart = sqrt.(xx .^2 + yy .^2)
+    pp_cart = atan2.(yy,xx)
+    pp_cart[pp_cart .< 0] = pp_cart[pp_cart .< 0] + 2 * pi
+    # Create the interpolation object
+    var_xy = Array{Float64}(size(xx))
+    var_itp = interpolate((r,phi),var,Gridded(Linear()))
+    # Interpolate from polar to Cartesian
+    for j in eachindex(yy[1,:])
+        for i in eachindex(xx[:,1])
+            var_xy[i,j] = var_itp[rr_cart[i,j],pp_cart[i,j]]
+        end
+    end
+    # Return var_xy, x, and y if xy_out is true
+    if xy_out == true
+        return xx[:,1],yy[1,:],var_xy
+    else
+        return var_xy
     end
 end
 
