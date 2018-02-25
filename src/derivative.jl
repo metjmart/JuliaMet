@@ -33,7 +33,6 @@ function finite_dr(r::AbstractVector{<:Real},field::AbstractArray{<:Real})
                    same length")
         end
         dvardr = similar(field,Float64)
-        fill!(dvardr,NaN)
         # Loop to compute radial derivative
         for i in eachindex(r)
             # Forward difference at innermost boundary
@@ -52,23 +51,20 @@ function finite_dr(r::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardr
     elseif ndims(field) == 2
-        # Define the dimensions of the input variable
-        d1,d2 = size(field)
-        if length(r) != d1
+        if length(r) != size(field)[1]
             error("Vector r and first dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardr = similar(field,Float64)
-        fill!(dvardr, NaN)
         # Loop over all dimensions to compute the radial derivative
-        for j in 1:d2
-            for i in 1:d1
+        for j in 1:size(field)[2]
+            for i in eachindex(r)
                 # Forward difference at innermost boundary
                 if i==1
                     dvardr[i,j] = (-3.0*field[i,j] + 4.0*field[i+1,j] - 
                                    field[i+2,j]) / (r[i+2]-r[i])
                 # Reverse difference at outermost boundary
-                elseif i==d1
+                elseif i==length(r)
                     dvardr[i,j] = (3.0*field[i,j] - 4.0*field[i-1,j] + 
                                    field[i-2,j]) / (r[i]-r[i-2])
                 # Centered difference at all other grid points
@@ -80,24 +76,21 @@ function finite_dr(r::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardr
     elseif ndims(field) == 3 
-        # Define the dimensions of the input variable
-        d1,d2,d3 = size(field)
-        if length(r) != d1
+        if length(r) != size(field)[1]
             error("Vector r and first dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardr = similar(field,Float64)
-        fill!(dvardr, NaN)
         # Loop over all dimensions to compute the radial derivative
-        for k in 1:d3
-            for j in 1:d2
-                for i in 1:d1
+        for k in 1:size(field)[3]
+            for j in 1:size(field)[2]
+                for i in eachindex(r)
                     # Forward difference at innermost boundary
                     if i==1
                         dvardr[i,j,k] = (-3.0*field[i,j,k] + 4.0*field[i+1,j,k] - 
                                          field[i+2,j,k]) / (r[i+2]-r[i])
                     # Reverse difference at outermost boundary
-                    elseif i==d1
+                    elseif i==length(r)
                         dvardr[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i-1,j,k] + 
                                          field[i-2,j,k]) / (r[i]-r[i-2])
                     # Centered difference at all other grid points
@@ -131,7 +124,6 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
                    same length")
         end
         dvardx = similar(field,Float64)
-        fill!(dvardx,NaN)
         # Loop to compute x-derivative
         for i in eachindex(x)
             # Forward difference at innermost boundary
@@ -150,23 +142,20 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardx
     elseif ndims(field) == 2
-        # Define the dimensions of the input variable
-        d1,d2 = size(field)
-        if length(x) != d1
+        if length(x) != size(field)[1]
             error("Vector x and first dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardx = similar(field,Float64)
-        fill!(dvardx, NaN)
         # Loop over all dimensions to compute the x-derivative
-        for j in 1:d2
-            for i in 1:d1
+        for j in 1:size(field)[2]
+            for i in eachindex(x)
                 # Forward difference at innermost boundary
                 if i==1
                     dvardx[i,j] = (-3.0*field[i,j] + 4.0*field[i+1,j] - 
                                    field[i+2,j]) / (x[i+2]-x[i])
                 # Reverse difference at outermost boundary
-                elseif i==d1
+                elseif i==length(x)
                     dvardx[i,j] = (3.0*field[i,j] - 4.0*field[i-1,j] + 
                                    field[i-2,j]) / (x[i]-x[i-2])
                 # Centered difference at all other grid points
@@ -178,24 +167,21 @@ function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardx
     elseif ndims(field) == 3 
-        # Define the dimensions of the input variable
-        d1,d2,d3 = size(field)
-        if length(x) != d1
+        if length(x) != size(field)[1]
             error("Vector x and first dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardx = similar(field,Float64)
-        fill!(dvardx, NaN)
         # Loop over all dimensions to compute the x-derivative
-        for k in 1:d3
-            for j in 1:d2
-                for i in 1:d1
+        for k in 1:size(field)[3]
+            for j in 1:size(field)[2]
+                for i in eachindex(x)
                     # Forward difference at innermost boundary
                     if i==1
                         dvardx[i,j,k] = (-3.0*field[i,j,k] + 4.0*field[i+1,j,k] - 
                                          field[i+2,j,k]) / (x[i+2]-x[i])
                     # Reverse difference at outermost boundary
-                    elseif i==d1
+                    elseif i==length(x)
                         dvardx[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i-1,j,k] + 
                                          field[i-2,j,k]) / (x[i]-x[i-2])
                     # Centered difference at all other grid points
@@ -229,7 +215,6 @@ function finite_dy(y::AbstractVector{<:Real},field::AbstractArray{<:Real})
                    same length")
         end 
         dvardy = similar(field,Float64)
-        fill!(dvardy, NaN)
         # Loop over all dimensions to compute the y-derivative
         for i in eachindex(y)
             # Forward difference at innermost boundary
@@ -248,23 +233,20 @@ function finite_dy(y::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardy
     elseif ndims(field) == 2
-        # Define the dimensions of the input variable
-        d1,d2 = size(field)
-        if length(y) != d2 
+        if length(y) != size(field)[2]
             error("Vector y and second dimension of the variable to differentiated
                    must be of same length")
         end 
         dvardy = similar(field,Float64)
-        fill!(dvardy, NaN)
         # Loop over all dimensions to compute the y-derivative
-        for j in 1:d2
-            for i in 1:d1
+        for j in eachindex(y)
+            for i in 1:size(field)[1]
                 # Forward difference at innermost boundary
                 if j==1
                     dvardy[i,j] = (-3.0*field[i,j] + 4.0*field[i,j+1] - 
                                    field[i,j+2]) / (y[j+2]-y[j])
                 # Reverse difference at outermost boundary
-                elseif j==d2
+                elseif j==length(y)
                     dvardy[i,j] = (3.0*field[i,j] - 4.0*field[i,j-1] + 
                                    field[i,j-2]) / (y[j]-y[j-2])
                 # Centered difference at all other grid points
@@ -277,24 +259,21 @@ function finite_dy(y::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardy
     elseif ndims(field) == 3 
-        # Define the dimensions of the input variable
-        d1,d2,d3 = size(field)
-        if length(y) != d2 
+        if length(y) != size(field)[2]
             error("Vector y and second dimension of the variable to differentiated
                    must be of same length")
         end 
         dvardy = similar(field,Float64)
-        fill!(dvardy, NaN)
         # Loop over all dimensions to compute the y-derivative
-        for k in 1:d3
-            for j in 1:d2
-                for i in 1:d1
+        for k in 1:size(field)[3]
+            for j in eachindex(y)
+                for i in 1:size(field)[1]
                     # Forward difference at innermost boundary
                     if j==1
                         dvardy[i,j,k] = (-3.0*field[i,j,k] + 4.0*field[i,j+1,k] - 
                                          field[i,j+2,k]) / (y[j+2]-y[j])
                     # Reverse difference at outermost boundary
-                    elseif j==d2
+                    elseif j==length(y)
                         dvardy[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i,j-1,k] + 
                                          field[i,j-2,k]) / (y[j]-y[j-2])
                     # Centered difference at all other grid points
@@ -328,7 +307,6 @@ function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
                    same length")
         end 
         dvardz = similar(field,Float64)
-        fill!(dvardz, NaN)
         # Loop over all dimensions to compute the vertical derivative
         for k in eachindex(z)
             # Forward difference at lower boundary
@@ -347,23 +325,20 @@ function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardz
     elseif ndims(field) == 2
-        # Define the dimensions of the input variable
-        d1,d2 = size(field)
-        if length(z) != d2
+        if length(z) != size(field)[2]
             error("Vector z and second dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardz = similar(field,Float64)
-        fill!(dvardz, NaN)
         # Loop over all dimensions to compute the vertical derivative
-        for k in 1:d2
-            for j in 1:d1
+        for k in eachindex(z)
+            for j in 1:size(field)[1]
                 # Forward difference at lower boundary
                 if k==1
                     dvardz[j,k] = (-3.0*field[j,k] + 4.0*field[j,k+1] - 
                                    field[j,k+2]) / (z[k+2]-z[k])
                 # Reverse difference at upper boundary
-                elseif k==d2
+                elseif k==length(z)
                     dvardz[j,k] = (3.0*field[j,k] - 4.0*field[j,k-1] + 
                                    field[j,k-2]) / (z[k]-z[k-2])
                 # Centered difference at all other grid points
@@ -376,24 +351,21 @@ function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
 
         return dvardz
     elseif ndims(field) == 3
-        # Define the dimensions of the input variable
-        d1,d2,d3 = size(field)
-        if length(z) != d3 
+        if length(z) != size(field)[3]
             error("Vector z and third dimension of variable to be differentiated 
                    must be of same length")
         end 
         dvardz = similar(field,Float64)
-        fill!(dvardz, NaN)
         # Loop over all dimensions to compute the vertical derivative
-        for k in 1:d3
-            for j in 1:d2
-                for i in 1:d1
+        for k in eachindex(z)
+            for j in 1:size(field)[2]
+                for i in 1:size(field)[1]
                     # Forward difference at lower boundary
                     if k==1
                         dvardz[i,j,k] = (-3.0*field[i,j,k] + 4.0*field[i,j,k+1] - 
                                          field[i,j,k+2]) / (z[k+2]-z[k])
                     # Reverse difference at upper boundary
-                    elseif k==d3
+                    elseif k==length(z)
                         dvardz[i,j,k] = (3.0*field[i,j,k] - 4.0*field[i,j,k-1] + 
                                          field[i,j,k-2]) / (z[k]-z[k-2])
                     # Centered difference at all other grid points
@@ -425,19 +397,17 @@ function finite_laplacian(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                           field::AbstractArray{<:Real})
 
     if ndims(field) == 2
-        # Define the dimensions of the input variable
-        d1,d2 = size(field) 
-        if length(x) != d1 || length(y) != d2
+        if length(x) != size(field)[1] || length(y) != size(field)[2]
             error("Input variable to be differentiated must have dimensions of  
-                  [x,y]")
+                  (x,y)")
         end
         hx = (x[2]-x[1])^2
         hy = (y[2]-y[1])^2
         out = similar(field,Float64)
         fill!(out, NaN)
         # Loop over all dimensions to compute the Laplacian
-        for j in 2:d2-1
-            for i in 2:d1-1
+        for j in 2:length(y) - 1
+            for i in 2:length(x) - 1
                 out[i,j] = (field[i+1,j] + field[i-1,j])/hx + 
                            (field[i,j+1] + field[i,j-1])/hy 
             end
@@ -447,18 +417,18 @@ function finite_laplacian(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     elseif ndims(field) == 3 
         # Define the dimensions of the input variable
         d1,d2,d3 = size(field) 
-        if length(x) != d1 || length(y) != d2
+        if length(x) != size(field)[1] || length(y) != size(field)[2]
             error("Input variable to be differentiated must have dimensions of  
-                   [x,y,z]")
+                   (x,y,z)")
         end 
         hx = (x[2]-x[1])^2
         hy = (y[2]-y[1])^2
         out = similar(field,Float64)
         fill!(out, NaN)
         # Loop over all dimensions to compute the Laplacian
-        for k in 1:d3
-            for j in 2:d2-1
-                for i in 2:d1-1
+        for k in 1:size(field)[3]
+            for j in 2:length(y) - 1
+                for i in 2:length(x) - 1
                    out[i,j,k] = (field[i+1,j,k] + field[i-1,j,k])/hx + 
                                 (field[i,j+1,k] + field[i,j-1,k])/hy 
                 end
