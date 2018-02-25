@@ -171,8 +171,16 @@ Can be used to provide smooth transition regions for, e.g., vorticity rings.
 See Schubert et al. (1999; JAS) for examples
 ===============================================================================#
 
+# Single data points
+
 function hermite(radius::Real)
     return 1. - 3. * radius^2 + 2 * radius^3
+end
+
+# Vectors
+
+function hermite(radius::AbstractVector{<:Real})
+    return 1. - 3. * radius.^2 + 2 * radius.^3
 end
 
 #==============================================================================
