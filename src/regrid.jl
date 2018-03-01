@@ -161,11 +161,11 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
     x_polar = r2d .* cos.(phi2d)
     y_polar = r2d .* sin.(phi2d)
     # Interpolate the data from the Cartesian grid to the polar grid 
-    field_pt = Array{Float64}(size(x_polar))
+    field_rp = Array{Float64}(size(x_polar))
     field_interp = extrapolate(interpolate((xn,yn), var, Gridded(Linear())), NaN)
     for i in eachindex(r)
         for j in eachindex(phi)
-             field_pt[i,j] = field_interp[x_polar[i,j],y_polar[i,j]]
+             field_rp[i,j] = field_interp[x_polar[i,j],y_polar[i,j]]
         end
     end
     # Return field_rp, r, and phi if rp_out is true
