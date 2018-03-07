@@ -45,7 +45,7 @@ function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
             pminx = x[findin(x,xx[min_ind])[1]]
             pminy = y[findin(y,yy[min_ind])[1]]
             # Compute pp as p - p_env
-            r,phi,prs_rpz = regrid_xy2rt(pminx,pminy,x,y,prs[:,:,k],true)
+            r,phi,prs_rpz = regrid_xy2rp(pminx,pminy,x,y,prs[:,:,k],true)
             azmean_p = azmean(r,z,prs_rpz)
             # p_env is azimuthally averaged p at r = 500 km
             r500 = closest_ind(r,500)
@@ -74,8 +74,8 @@ function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     end
     # Now use the first guess at 2 km to interpolate data 
     # and find azimuthal mean RMW 
-    r,phi,u_rpz = regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,u[:,:,z2km],true)
-    v_rpz = regrid_xy2rt(xbar0[z2km],ybar0[z2km],x,y,v[:,:,z2km])
+    r,phi,u_rpz = regrid_xy2rp(xbar0[z2km],ybar0[z2km],x,y,u[:,:,z2km],true)
+    v_rpz = regrid_xy2rp(xbar0[z2km],ybar0[z2km],x,y,v[:,:,z2km])
     # Convert u,v at 2 km to ur,vt
     ur,vt = uv2urvt(phi,u_rpz,v_rpz)
     # Compute the azimuthal mean tangential wind
