@@ -53,7 +53,7 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     sum = 0.0
     # Trapezoidal rule
     if method == :trapz
-        n < 2 ? error("Must have at least one sub-interval for integration") : nothing
+        n < 1 ? error("Must have at least one sub-interval for integration") : nothing
         for i in 2:length(x)
             if !isnan(y[i]) && !isnan(y[i-1])
                 @inbounds sum += (x[i] - x[i-1]) * (y[i] + y[i-1])
