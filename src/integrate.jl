@@ -46,22 +46,21 @@ Methods
 function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                       method::Symbol=:trapz)
 
-    if length(y) != length(x)
-       error("Vectors x and y must be of same length")
-    end
+    length(y) == length(x) ? nothing : 
+        throw(DimensionMismatch("Input vectors must have same length"))
+    # Define the number of sub-intervals
     n::Int = length(y)-1
     sum = 0.0
+    # Trapezoidal rule
     if method == :trapz
-        if n < 2
-            error("Must have at least one sub-interval for integration")
-        end
+        n < 2 ? error("Must have at least one sub-interval for integration") : nothing
         for i in 2:length(x)
             if !isnan(y[i]) && !isnan(y[i-1])
-                sum += (x[i] - x[i-1]) * (y[i] + y[i-1])
+                @inbounds sum += (x[i] - x[i-1]) * (y[i] + y[i-1])
             end
         end
-
         return sum/2.0
+    # Simpson's 1/3 rule
     elseif method == :simps13
         if !iseven(n)
             error("Number of sub-intervals must be even")
@@ -70,10 +69,10 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end
         for i in 3:2:length(x)
-            sum += (x[i] - x[i-2]) * (y[i] + 4.0*y[i-1] + y[i-2])
+            @fastmath @inbounds sum += (x[i] - x[i-2]) * (y[i] + 4.0*y[i-1] + y[i-2])
         end
-    
         return sum/6.0
+    # Simpson's 3/8 rule
     elseif method == :simps38
         if n % 3 != 0
             error("Number of sub-intervals must be a multiple of 3")
@@ -82,10 +81,11 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end 
         for i in 4:3:length(x)
-            sum += (x[i] - x[i-3]) * (y[i] + 3.0*y[i-1] + 3.0*y[i-2] + y[i-3])
+            @fastmath @inbounds sum += (x[i] - x[i-3]) * (y[i] + 3.0*y[i-1] + 3.0*y[i-2] + y[i-3])
         end  
 
         return sum/8.0 
+    # Boole's rule
     elseif method == :boole
         if n % 4 != 0 
             error("Number of sub-intervals must be a multiple of 4")
@@ -94,10 +94,9 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end  
         for i in 5:4:length(x)
-            sum += (x[i] - x[i-4]) * (7.0*y[i] + 32.0*y[i-1] + 12.0*y[i-2] + 
-                                      32.0*y[i-3] + 7.0*y[i-4])
+            @fastmath @inbounds sum += (x[i] - x[i-4]) * (7.0*y[i] + 32.0*y[i-1] + 12.0*y[i-2] + 
+                                        32.0*y[i-3] + 7.0*y[i-4])
         end
-    
         return sum/90.0
     end
 end
@@ -116,20 +115,17 @@ var = dependent variable with size [x,y]
 function trapz2d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                  var::AbstractArray{<:Real,2})
 
-    # Define the dimensions of the input variable
-    d1,d2 = size(var)
-    if d1 != length(x) || d2 != length(y)
-        error("Input variable to be integrated must have dimensions of [x,y]")
-    end 
+    size(var)[1] == length(x) && size(var)[2] == length(y) ? nothing : 
+        throw(DimensionMismatch("Input variable to be integrated must have 
+                                 dimensions of [length(x),length(y)]"))
     int1 = similar(x,Float64)
     fill!(int1, NaN)
     # Integrate along y-axis 
     for i in eachindex(x)
-        int1[i] = newton_cotes(y,var[i,:])
+        @inbounds int1[i] = newton_cotes(y,var[i,:])
     end
     # Integrate along x-axis
     int2 = newton_cotes(x,int1)
-
     return int2            
 end
 
@@ -148,11 +144,9 @@ var = dependent variable with size [x,y,z]
 function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                  z::AbstractVector{<:Real},var::AbstractArray{<:Real,3})
 
-    # Define the dimensions of the input variable
-    d1,d2,d3 = size(var)
-    if d1 ! = length(x) || d2 != length(y) || d3 != length(z)
-        error("Input variable to be integrated must have dimensions of [x,y,z]")
-    end 
+    size(var)[1] == length(x) && size(var)[2] == length(y) && size(var)[3] == length(z) ? nothing :
+        throw(DimensionMismatch("Input variable to be integrated must have dimensions 
+                                 of [length(x),length(y),length(z)]"))
     int1 = Array{Float64}(length(x),length(y)) 
     fill!(int1, NaN)
     int2 = similar(x)
@@ -160,14 +154,13 @@ function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            int1[i,j] = newton_cotes(z,var[i,j,:])
+            @inbounds int1[i,j] = newton_cotes(z,var[i,j,:])
         end
         # Integrate along y-axis
-        int2[i] = newton_cotes(y,int1[i,:])
+        @inbounds int2[i] = newton_cotes(y,int1[i,:])
     end
     # Integrate along x-axis
     int3 = newton_cotes(x,int2)
-
     return int3            
 end
 
