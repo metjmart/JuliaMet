@@ -6,6 +6,7 @@ module JuliaMet
     export extract_rgbs, create_cmap
     export calc_rmw, azmean, uv2urvt, rankine, hermite, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian
+    export rmnan, fourierols, wavecoeffs
     export newton_cotes, trapz1d, trapz2d, trapz3d
     export nanmax, nanmin, nanextrema, nansum, nanmean, nanmedian, nanvar, 
            nanstd
@@ -20,6 +21,7 @@ module JuliaMet
     include("cmaps.jl")
     include("cyclone.jl")
     include("derivative.jl")    
+    include("harmonics.jl")
     include("integrate.jl")
     include("nanstats.jl")
     include("nc_tools.jl")
