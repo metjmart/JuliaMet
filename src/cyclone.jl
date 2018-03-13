@@ -27,15 +27,10 @@ dimensions of r,z.
 function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
                   azmean_vt::AbstractArray{<:Real,2})
 
-    if size(azmean_vt) != (length(r),length(z))
-        error("Input tangential wind variable must have dimensions 
-               of (radius,z)")
-    end 
-    # Create an array with the radial values at each height
-    r_new = Array{Float64}(length(r),length(z))
-    for k in eachindex(z)
-        r_new[:,k] = r
-    end
+    size(azmean_vt)[1] == length(r) && size(azmean_vt)[2] == length(z) ? nothing :
+        throw(DimensionMismatch("Input tangential wind variable must have 
+                                 dimensions of [r,z]")) 
+    @fastmath r_new = r .* ones(z)'
     # Compute the azimuthal mean RMW at each vertical level
     rmw = similar(z,Float64)
     fill!(rmw, NaN)
@@ -46,9 +41,7 @@ function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
             rmw[k] = r_new[vtmax[2][k]]
         end
     end
-
     return rmw
-
 end
 
 #==============================================================================
@@ -59,38 +52,60 @@ Input variable can be 2-D (r,phi) or 3-D (r,phi,z)
 ** Be sure to use the nanmean function since NaNs may be present
 ==============================================================================#
 
-function azmean(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
-                var::AbstractArray{<:Real})
+# Left off here in updating performance!!! 
 
-    if ndims(var) == 2
-        if size(var)[1] != length(r)
-            error("Vector r and first dimension of input variable must be of 
-                   same length")
-        end 
-        # Define an array for the azimuthal mean
-        azmean_var = Array{Float64}(length(r))
-        fill!(azmean_var, NaN)
-        # Calculate the azimuthal mean 
+# Azimuthal mean for a 2-D variable with dimensions [r,phi]
+
+function azmean(r::AbstractVector{<:Real},field::AbstractArray{<:Real,2})
+
+    size(field)[1] == length(r) ? nothing : 
+        throw(DimensionMismatch("Vector r and first dimension of input 
+                                 variable must be of same length"))
+    # Define an array for the azimuthal mean
+    azmean_field = Array{Float64}(length(r))
+    if any(isnan.(field))
+        fill!(azmean_field, NaN)
+        # Compute the azimuthal mean using nanmean
         for i in eachindex(r)
-            azmean_var[i] = nanmean(var[i,:])
+            azmean_field[i] = nanmean(field[i,:])
         end
-        
-        return azmean_var
-    elseif ndims(var) == 3
-        if size(var)[1] != length(r) || size(var)[3] != length(z)
-            error("Input variable must have dimensions of (radius,phi,z)")
-        end 
-        # Define an array for the azimuthal mean
-        azmean_var = Array{Float64}(length(r),length(z)) 
-        fill!(azmean_var, NaN)
-        # Calculate the azimuthal mean 
+        return azmean_field
+    else
+        # Compute the azimuthal mean
+        for i in eachindex(r)
+            azmean_field[i] = mean(field[i,:])
+        end
+        return azmean_field
+    end
+end
+
+# Azimuthal mean for variables with dimensions [r,phi,z]
+         
+function azmean(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
+                field::AbstractArray{<:Real,3})
+
+    size(field)[1] == length(r) && size(field)[3] == length(z) ? nothing : 
+        throw(DimensionMismatch("Input variable must have dimensions of 
+                                 [r,phi,z]"))
+    # Define an array for the azimuthal mean
+    azmean_field = Array{Float64}(length(r),length(z))
+    if any(isnan.(field))
+        fill!(azmean_field, NaN)
+        # Compute the azimuthal mean using nanmean
         for k in eachindex(z)
             for i in eachindex(r)
-                azmean_var[i,k] = nanmean(var[i,:,k])
+                azmean_field[i,k] = nanmean(field[i,:,k])
             end
         end
-
-        return azmean_var
+        return azmean_field
+    else 
+        # Compute the azimuthal mean
+        for k in eachindex(z)
+            for i in eachindex(r)
+                azmean_field[i,k] = mean(field[i,:,k])
+            end
+        end
+        return azmean_field
     end 
 end
 
@@ -105,34 +120,30 @@ Input u and v can either be 2-D (r,phi) or 3-D (r,phi,z)
 function uv2urvt(phi::AbstractVector{<:Real},u::AbstractArray{<:Real},
                  v::AbstractArray{<:Real})
 
-    if size(u) != size(v)
-        error("Input u and v arrays must have same size")
-    end
+    size(u) == size(v) ? nothing : 
+        throw(DimensionMismatch("Input u and v arrays must have same size"))
     # Create the ur and vt arrayzs
     ur = Array{Float64}(size(u))
     vt = Array{Float64}(size(v))
-    # Convert u,v to ur,vt
+    # Convert u,v to ur,vt for variables with [r,phi] dimensions
     if ndims(u) == 2
-        if size(u)[2] != length(phi)
-            error("Vector phi and second dimension of u,v arrays must be 
-                   of same length")
-        end
+        size(u)[2] == length(phi) && size(v)[2] == length(phi) ? nothing :
+            throw(DimensionMismatch("Vector phi and second dimension of u,v arrays
+                                     must be of same length"))
         for j in eachindex(phi)
             ur[:,j] =  u[:,j] .* cos.(phi[j]) + v[:,j] .* sin.(phi[j])
             vt[:,j] = -u[:,j] .* sin.(phi[j]) + v[:,j] .* cos.(phi[j])
         end
-
         return ur,vt
+    # Convert u,v to ur,vt for variables with [r,phi,z] dimensions
     elseif ndims(u) == 3 
-        if size(u)[2] != length(phi)
-            error("Vector phi and second dimension of u,v arrays must be 
-                   of same length")
-        end 
+        size(u)[2] == length(phi) && size(v)[2] == length(phi) ? nothing : 
+            throw(DimensionMismatch("Vector phi and second dimension of u,v arrays 
+                                     must be of same length"))
         for j in eachindex(phi)
             ur[:,j,:] =  u[:,j,:] .* cos.(phi[j]) + v[:,j,:] .* sin.(phi[j])
             vt[:,j,:] = -u[:,j,:] .* sin.(phi[j]) + v[:,j,:] .* cos.(phi[j])
         end
-
         return ur,vt
     end 
 end
@@ -151,13 +162,13 @@ function rankine(rmax::Real,vmax::Real,rr::AbstractArray{<:Real,2},
 
     if method == :vt
         vt = Array{Float64}(size(rr))
-        vt[rr .< rmax] = vmax .* rr[rr .< rmax] ./ rmax
-        vt[rr .>= rmax] = vmax .* rmax ./ rr[rr .>= rmax]
+        @fastmath @inbounds vt[rr .< rmax] = vmax .* rr[rr .< rmax] ./ rmax
+        @fastmath @inbounds vt[rr .>= rmax] = vmax .* rmax ./ rr[rr .>= rmax]
         return vt
     elseif method == :vort
         vort = Array{Float64}(size(rr))
-        vort[rr .< rmax] = 2 * vmax / rmax
-        vort[rr .>= rmax] = 0
+        @fastmath @inbounds vort[rr .< rmax] = 2 * vmax / rmax
+        @fastmath @inbounds vort[rr .>= rmax] = 0
         return vort
     end
 end
@@ -174,13 +185,13 @@ See Schubert et al. (1999; JAS) for examples
 # Single data points
 
 function hermite(radius::Real)
-    return 1. - 3. * radius^2 + 2 * radius^3
+    return @fastmath 1. - 3. * radius^2 + 2 * radius^3
 end
 
 # Vectors
 
 function hermite(radius::AbstractVector{<:Real})
-    return 1. - 3. * radius.^2 + 2 * radius.^3
+    return @fastmath 1. - 3. * radius.^2 + 2 * radius.^3
 end
 
 #==============================================================================
