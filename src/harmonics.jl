@@ -85,9 +85,9 @@ function fourierols(nk::Int,phi::AbstractVector{<:Real},b::AbstractVector{<:Real
         end 
     end
     # If det(A^T * A) = 0, no unique solution -- throw error
-    det(transpose(A) * A) == 0 ? error("No unique solution exists") : nothing 
+    det(At_mul_B(A,A)) == 0 ? error("No unique solution exists") : nothing 
     # Solve the normal equations (A^T * A) * a = A^T * b 
-    a = (transpose(A) * A) \ (transpose(A) * b)
+    a = (At_mul_B(A,A)) \ (At_mul_B(A,b))
     return a
 end
 
