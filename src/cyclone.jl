@@ -9,7 +9,6 @@
 # cyclone related applications.
 # 
 # calc_rmw
-# azmean
 # uv2urvt
 # rankine
 # hermite
@@ -45,71 +44,6 @@ function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
 end
 
 #==============================================================================
-azmean
-
-Compute the azimuthal mean of the input variable. 
-Input variable can be 2-D (r,phi) or 3-D (r,phi,z)
-** Be sure to use the nanmean function since NaNs may be present
-==============================================================================#
-
-# Left off here in updating performance!!! 
-
-# Azimuthal mean for a 2-D variable with dimensions [r,phi]
-
-function azmean(r::AbstractVector{<:Real},field::AbstractArray{<:Real,2})
-
-    size(field)[1] == length(r) ? nothing : 
-        throw(DimensionMismatch("Vector r and first dimension of input 
-                                 variable must be of same length"))
-    # Define an array for the azimuthal mean
-    azmean_field = Array{Float64}(length(r))
-    if any(isnan.(field))
-        fill!(azmean_field, NaN)
-        # Compute the azimuthal mean using nanmean
-        for i in eachindex(r)
-            azmean_field[i] = nanmean(field[i,:])
-        end
-        return azmean_field
-    else
-        # Compute the azimuthal mean
-        for i in eachindex(r)
-            azmean_field[i] = mean(field[i,:])
-        end
-        return azmean_field
-    end
-end
-
-# Azimuthal mean for variables with dimensions [r,phi,z]
-         
-function azmean(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
-                field::AbstractArray{<:Real,3})
-
-    size(field)[1] == length(r) && size(field)[3] == length(z) ? nothing : 
-        throw(DimensionMismatch("Input variable must have dimensions of 
-                                 [r,phi,z]"))
-    # Define an array for the azimuthal mean
-    azmean_field = Array{Float64}(length(r),length(z))
-    if any(isnan.(field))
-        fill!(azmean_field, NaN)
-        # Compute the azimuthal mean using nanmean
-        for k in eachindex(z)
-            for i in eachindex(r)
-                azmean_field[i,k] = nanmean(field[i,:,k])
-            end
-        end
-        return azmean_field
-    else 
-        # Compute the azimuthal mean
-        for k in eachindex(z)
-            for i in eachindex(r)
-                azmean_field[i,k] = mean(field[i,:,k])
-            end
-        end
-        return azmean_field
-    end 
-end
-
-#==============================================================================
 uv2urvt
 
 Convert u (east-west) and v (north-south) winds to radial and tangential winds
@@ -120,32 +54,25 @@ Input u and v can either be 2-D (r,phi) or 3-D (r,phi,z)
 function uv2urvt(phi::AbstractVector{<:Real},u::AbstractArray{<:Real},
                  v::AbstractArray{<:Real})
 
-    size(u) == size(v) ? nothing : 
+    size(u) == size(v) ? nothing :
         throw(DimensionMismatch("Input u and v arrays must have same size"))
-    # Create the ur and vt arrayzs
-    ur = Array{Float64}(size(u))
-    vt = Array{Float64}(size(v))
-    # Convert u,v to ur,vt for variables with [r,phi] dimensions
+    # Convert u,v to ur,vt for variables with (r,phi) dimensions
     if ndims(u) == 2
         size(u)[2] == length(phi) && size(v)[2] == length(phi) ? nothing :
             throw(DimensionMismatch("Vector phi and second dimension of u,v arrays
                                      must be of same length"))
-        for j in eachindex(phi)
-            ur[:,j] =  u[:,j] .* cos.(phi[j]) + v[:,j] .* sin.(phi[j])
-            vt[:,j] = -u[:,j] .* sin.(phi[j]) + v[:,j] .* cos.(phi[j])
-        end
+        ur =  u .* cos.(phi)' + v .* sin.(phi)'
+        vt = -u .* sin.(phi)' + v .* cos.(phi)'
         return ur,vt
-    # Convert u,v to ur,vt for variables with [r,phi,z] dimensions
-    elseif ndims(u) == 3 
-        size(u)[2] == length(phi) && size(v)[2] == length(phi) ? nothing : 
-            throw(DimensionMismatch("Vector phi and second dimension of u,v arrays 
+    # Convert u,v to ur,vt for variables with (r,phi,z) dimensions
+    elseif ndims(u) == 3
+        size(u)[2] == length(phi) && size(v)[2] == length(phi) ? nothing :
+            throw(DimensionMismatch("Vector phi and second dimension of u,v arrays
                                      must be of same length"))
-        for j in eachindex(phi)
-            ur[:,j,:] =  u[:,j,:] .* cos.(phi[j]) + v[:,j,:] .* sin.(phi[j])
-            vt[:,j,:] = -u[:,j,:] .* sin.(phi[j]) + v[:,j,:] .* cos.(phi[j])
-        end
+        ur =  u .* cos.(phi)' + v .* sin.(phi)'
+        vt = -u .* sin.(phi)' + v .* cos.(phi)'
         return ur,vt
-    end 
+    end
 end
 
 #==============================================================================
@@ -157,19 +84,29 @@ Input rr should be a 2-D array with dimensions of (r,phi)
 *** Assumes rmax and rr are in units of meters and vmax is m/s!!!
 ===============================================================================#
 
-function rankine(rmax::Real,vmax::Real,rr::AbstractArray{<:Real,2},
-                 method::Symbol=:vt)
+function rankine(rmax::Real,vmax::Real,r::AbstractVector{<:Real},
+                 phi::AbstractVector{<:Real},method::Symbol=:vt)
 
     if method == :vt
-        vt = Array{Float64}(size(rr))
-        @fastmath @inbounds vt[rr .< rmax] = vmax .* rr[rr .< rmax] ./ rmax
-        @fastmath @inbounds vt[rr .>= rmax] = vmax .* rmax ./ rr[rr .>= rmax]
-        return vt
+        vt = Float64[]
+        for i in eachindex(r)
+            if r[i] < rmax
+                @fastmath push!(vt, vmax * r[i] / rmax)
+            else
+                @fastmath push!(vt, vmax * rmax / r[i])
+            end
+        end
+        return @fastmath vt .* ones(phi)'
     elseif method == :vort
-        vort = Array{Float64}(size(rr))
-        @fastmath @inbounds vort[rr .< rmax] = 2 * vmax / rmax
-        @fastmath @inbounds vort[rr .>= rmax] = 0
-        return vort
+        vort = Float64[]
+        for i in eachindex(r)
+            if r[i] < rmax
+                @fastmath push!(vort, 2 * vmax / rmax)
+            else
+                @fastmath push!(vort,0)
+            end
+        end
+        return @fastmath vort .* ones(phi)'
     end
 end
 
