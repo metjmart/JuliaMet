@@ -8,13 +8,13 @@
 # This script contains a set of functions for integrating discretized data
 #
 # Function list:
-# newton_cotes
+# newtoncotes
 # trapz2d
 # trapz3d
 # *****************************************************************************
 
 #==============================================================================
-newton_cotes
+newtoncotes
 
 Family of integration methods from the closed Newton-Cotes formulae -- see 
 http://mathworld.wolfram.com/Newton-CotesFormulas.html for reference.
@@ -43,23 +43,23 @@ Methods
 
 ==============================================================================#
 
-function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
-                      method::Symbol=:trapz)
+function newtoncotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                     method::Symbol=:trapz)
 
     length(y) == length(x) ? nothing : 
         throw(DimensionMismatch("Input vectors must have same length"))
     # Define the number of sub-intervals
     n::Int = length(y)-1
-    sum = 0.0
+    numer = 0.0
     # Trapezoidal rule
     if method == :trapz
         n < 1 ? error("Must have at least one sub-interval for integration") : nothing
         for i in 2:length(x)
             if !isnan(y[i]) && !isnan(y[i-1])
-                @inbounds sum += (x[i] - x[i-1]) * (y[i] + y[i-1])
+                @inbounds numer += (x[i] - x[i-1]) * (y[i] + y[i-1])
             end
         end
-        return sum/2.0
+        return numer/2.0
     # Simpson's 1/3 rule
     elseif method == :simps13
         if !iseven(n)
@@ -69,9 +69,9 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end
         for i in 3:2:length(x)
-            @fastmath @inbounds sum += (x[i] - x[i-2]) * (y[i] + 4.0*y[i-1] + y[i-2])
+            @fastmath @inbounds numer += (x[i] - x[i-2]) * (y[i] + 4.0*y[i-1] + y[i-2])
         end
-        return sum/6.0
+        return numer/6.0
     # Simpson's 3/8 rule
     elseif method == :simps38
         if n % 3 != 0
@@ -81,10 +81,9 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end 
         for i in 4:3:length(x)
-            @fastmath @inbounds sum += (x[i] - x[i-3]) * (y[i] + 3.0*y[i-1] + 3.0*y[i-2] + y[i-3])
+            @fastmath @inbounds numer += (x[i] - x[i-3]) * (y[i] + 3.0*y[i-1] + 3.0*y[i-2] + y[i-3])
         end  
-
-        return sum/8.0 
+        return numer/8.0 
     # Boole's rule
     elseif method == :boole
         if n % 4 != 0 
@@ -94,10 +93,10 @@ function newton_cotes(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
                    consider using the trapezoidal rule")
         end  
         for i in 5:4:length(x)
-            @fastmath @inbounds sum += (x[i] - x[i-4]) * (7.0*y[i] + 32.0*y[i-1] + 12.0*y[i-2] + 
+            @fastmath @inbounds numer += (x[i] - x[i-4]) * (7.0*y[i] + 32.0*y[i-1] + 12.0*y[i-2] + 
                                         32.0*y[i-3] + 7.0*y[i-4])
         end
-        return sum/90.0
+        return numer/90.0
     end
 end
 
@@ -109,23 +108,23 @@ Trapezoidal integration of a 2D Cartesian grid
 Required input:
 x   = vector for x-dimension
 y   = vector for y-dimension
-var = dependent variable with size [x,y]
+field = dependent variable with size (x,y)
 ==============================================================================#
 
 function trapz2d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
-                 var::AbstractArray{<:Real,2})
+                 field::AbstractArray{<:Real,2})
 
-    size(var)[1] == length(x) && size(var)[2] == length(y) ? nothing : 
+    size(field)[1] == length(x) && size(field)[2] == length(y) ? nothing : 
         throw(DimensionMismatch("Input variable to be integrated must have 
-                                 dimensions of [length(x),length(y)]"))
+                                 dimensions of (x,y)"))
     int1 = similar(x,Float64)
     fill!(int1, NaN)
     # Integrate along y-axis 
     for i in eachindex(x)
-        @inbounds int1[i] = newton_cotes(y,var[i,:])
+        @inbounds int1[i] = newtoncotes(y,field[i,:])
     end
     # Integrate along x-axis
-    int2 = newton_cotes(x,int1)
+    int2 = newtoncotes(x,int1)
     return int2            
 end
 
@@ -138,15 +137,15 @@ Required input:
 x   = vector for x-dimension
 y   = vector for y-dimension
 z   = vector for z-dimension
-var = dependent variable with size [x,y,z]
+field = dependent variable with size (x,y,z)
 ==============================================================================#
 
 function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
-                 z::AbstractVector{<:Real},var::AbstractArray{<:Real,3})
+                 z::AbstractVector{<:Real},field::AbstractArray{<:Real,3})
 
-    size(var)[1] == length(x) && size(var)[2] == length(y) && size(var)[3] == length(z) ? nothing :
+    size(field)[1] == length(x) && size(field)[2] == length(y) && size(field)[3] == length(z) ? nothing :
         throw(DimensionMismatch("Input variable to be integrated must have dimensions 
-                                 of [length(x),length(y),length(z)]"))
+                                 of (x,y,z)"))
     int1 = Array{Float64}(length(x),length(y)) 
     fill!(int1, NaN)
     int2 = similar(x)
@@ -154,13 +153,13 @@ function trapz3d(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
     # Integrate along z-axis 
     for i in eachindex(x)
         for j in eachindex(y)
-            @inbounds int1[i,j] = newton_cotes(z,var[i,j,:])
+            @inbounds int1[i,j] = newtoncotes(z,field[i,j,:])
         end
         # Integrate along y-axis
-        @inbounds int2[i] = newton_cotes(y,int1[i,:])
+        @inbounds int2[i] = newtoncotes(y,int1[i,:])
     end
     # Integrate along x-axis
-    int3 = newton_cotes(x,int2)
+    int3 = newtoncotes(x,int2)
     return int3            
 end
 
