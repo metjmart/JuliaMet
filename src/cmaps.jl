@@ -55,7 +55,9 @@ function create_cmap(name::AbstractString,ncolors::Any)
     # Define path to JuliaMet and extend to colormaps directory
     path = []
     for ipath in LOAD_PATH
-        path = ismatch(r"JuliaMet",ipath) ? ipath : nothing
+        if ismatch(r"JuliaMet",ipath)
+            path = ipath
+        end
     end
     fin = path*"colormaps/"*name
     rgb = readdlm(fin)
