@@ -169,14 +169,14 @@ function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
     pp_cart[pp_cart .< 0] = pp_cart[pp_cart .< 0] + 2 * pi
     # Create the interpolation object
     field_xy = Array{Float64}(length(x),length(y))
-    field_itp = interpolate((r,phi),field,Gridded(Linear()))
+    field_itp = extrapolate(interpolate((r,phi),field,Gridded(Linear())),NaN)
     # Interpolate from polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
             @inbounds field_xy[i,j] = field_itp[sqrt(x[i]^2 + y[j]^2), pp_cart[i,j]]
         end
     end
-    return var_xy
+    return field_xy
 end
 
 
