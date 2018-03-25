@@ -1,9 +1,8 @@
 module JuliaMet
 
-    using NetCDF, DataStructures, Interpolations, Colors, PyPlot
+    using NetCDF, DataStructures, Interpolations
 
     export p_centroid
-    export extract_rgbs, create_cmap
     export calc_rmw, uv2urvt, rankine, hermite, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian
     export rmnan, fourierols, wavecoeffs
@@ -17,7 +16,6 @@ module JuliaMet
 
 
     include("center_finding.jl")
-    include("cmaps.jl")
     include("cyclone.jl")
     include("derivative.jl")    
     include("harmonics.jl")

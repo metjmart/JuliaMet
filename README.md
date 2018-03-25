@@ -13,8 +13,6 @@ The following packages should be installed prior to using JuliaMet:
 * [NetCDF](https://github.com/JuliaGeo/NetCDF.jl)
 * [DataStructures](https://github.com/JuliaCollections/DataStructures.jl)
 * [Interpolations](https://github.com/JuliaMath/Interpolations.jl)
-* [Colors](https://github.com/JuliaGraphics/Colors.jl)
-* [PyPlot](https://github.com/JuliaPy/PyPlot.jl)
 
 This can be accomplished by opening the Julia REPL and running
 ```julia
@@ -58,9 +56,6 @@ using JuliaMet
 ### center_finding.jl
 * Functions to determine the center of a tropical cyclone 
 
-### cmaps.jl
-* Access and create ColorMaps in Julia 
-
 ### cyclone.jl 
 * Functions to compute relevant quantities from tropical cyclone data
 
@@ -89,4 +84,4 @@ using JuliaMet
 Disclaimer: The functions included in JuliaMet have largely been tested by myself and therefore may contain bugs.
 Users are encouraged to examine the source code prior to using any function in JuliaMet.
 Please contribute if you find bugs, find a more efficient way of doing something, or if you have your own functions!
-Documentation coming soon.
+Documentation and officialization coming soon!
