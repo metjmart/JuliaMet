@@ -41,7 +41,7 @@ region of a multi-dimensional array
 # General nansum function over entire array x
 
 function nansum(x::AbstractArray{<:Real})
-    return sum(filtnan(x))
+    return length(filtnan(x)) == 0 ? NaN : sum(filtnan(x))
 end
 
 # Apply nansum over a specific region in array x and option to squeeze the 
