@@ -88,11 +88,13 @@ function xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
     x0 = closest_ind(x - cx,0.0)
     y0 = closest_ind(y - cy,0.0)
     # Determine the max radius of polar coordinate grid and the phi increment
-    rmax = ceil(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
+    rmax = floor(sqrt((maximum(abs.(x)))^2 + (maximum(abs.(y))^2)))
     phi_inc = floor(atan2(y[y0]-y[y0-1],maximum(abs.(x))))
     phi_inc < pi/180 ? phi_inc = pi/180 : nothing
     # Return radius and azimuth arrays
-    return collect(0:(x[x0]-x[x0-1]):rmax), collect(0:phi_inc:2*pi - phi_inc)
+    r = collect(0:(round(x[x0],2) - round(x[x0-1],2)):rmax)
+    phi = collect(0:phi_inc:2*pi - phi_inc)
+    return r,phi
 end
 
 #==============================================================================
@@ -103,8 +105,6 @@ polar coordinate grid. It is specifically designed to work with NetCDF data
 by working around issues with fill values when interpolating the data.
 ** Follows http://mathworld.wolfram.com/PolarCoordinates.html for converting 
    Cartesian to polar coordinates
- 
-rp_out - Option to output r and phi arrays. Default is false.
 ==============================================================================#
 
 function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
@@ -123,13 +123,45 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
     return field_rp
 end
 
+# Allow r and phi as input arguments to the function
+
+function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{<:Real},
+                      y::AbstractVector{<:Real},r::AbstractVector{<:Real},
+                      phi::AbstractVector{<:Real},field::AbstractArray{<:Real,2})
+
+    # Interpolate the data from the Cartesian grid to the polar grid 
+    field_rp = Array{Float64}(length(r),length(phi))
+    field_itp = extrapolate(interpolate((x-cx, y-cy),field,Gridded(Linear())),NaN)
+    for j in eachindex(phi)
+        for i in eachindex(r)
+             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+        end
+    end
+    return field_rp
+end
+
+# If Cartesian domain is already centered at (0,0), no need for cx and cy input
+
+function regrid_xy2rp(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                      r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
+                      field::AbstractArray{<:Real,2})
+
+    # Interpolate the data from the Cartesian grid to the polar grid 
+    field_rp = Array{Float64}(length(r),length(phi))
+    field_itp = extrapolate(interpolate((x,y),field,Gridded(Linear())),NaN)
+    for j in eachindex(phi)
+        for i in eachindex(r)
+             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+        end
+    end
+    return field_rp
+end
+
 #==============================================================================
 regrid_xyz2rpz
 
 This function interpolates three-dimensional Cartesian data to a cylindrical 
 coordinate grid by executing regrid_xy2rp at each vertical level.
-
-rp_out - Option to output r and phi arrays, default is false.
 ==============================================================================#
 
 function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{<:Real},
@@ -143,6 +175,39 @@ function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{<:Real},
     # Call regrid_xy2rp at each vertical level 
     for k in eachindex(z)
         @inbounds field_rpz[:,:,k] = regrid_xy2rp(cx,cy,x,y,field[:,:,k])
+    end
+    # Return field_rpz
+    return field_rpz
+end
+
+# Allow r and phi as input arguments to the function
+
+function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{<:Real},
+                        y::AbstractVector{<:Real},z::AbstractVector{<:Real},
+                        r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
+                        field::AbstractArray{<:Real,3})
+
+    # Define the dimensions of the new var
+    field_rpz = Array{Float64}(length(r),length(phi),length(z))
+    # Call regrid_xy2rp at each vertical level 
+    for k in eachindex(z)
+        @inbounds field_rpz[:,:,k] = regrid_xy2rp(cx,cy,x,y,r,phi,field[:,:,k])
+    end
+    # Return field_rpz
+    return field_rpz
+end
+
+# If Cartesian domain is already centered at (0,0), no need for cx and cy input
+
+function regrid_xyz2rpz(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                        z::AbstractVector{<:Real},r::AbstractVector{<:Real},
+                        phi::AbstractVector{<:Real},field::AbstractArray{<:Real,3})
+
+    # Define the dimensions of the new var
+    field_rpz = Array{Float64}(length(r),length(phi),length(z))
+    # Call regrid_xy2rp at each vertical level 
+    for k in eachindex(z)
+        @inbounds field_rpz[:,:,k] = regrid_xy2rp(x,y,r,phi,field[:,:,k])
     end
     # Return field_rpz
     return field_rpz
