@@ -69,7 +69,7 @@ region of a multi-dimensional array
 # General nanmean function over entire array x
 
 function nanmean(x::AbstractArray{<:Real})
-    return mean(filtnan(x))
+    return length(filtnan(x)) == 0 ? NaN : mean(filtnan(x))
 end
 
 # Apply nanmean over a specific region in array x and option to squeeze the 
@@ -99,7 +99,7 @@ specifying the region of a multi-dimensional array
 # General nanvar function over entire array x
 
 function nanvar(x::AbstractArray{<:Real})
-    return var(filtnan(x))
+    return length(filtnan(x)) == 0 ? NaN : var(filtnan(x))
 end
 
 # Apply nanvar over a specific region in array x and option to squeeze the 
@@ -129,7 +129,7 @@ specifying the region of a multi-dimensional array
 # General nanstd function over entire array x
 
 function nanstd(x::AbstractArray{<:Real})
-    return std(filtnan(x))
+    return length(filtnan(x)) == 0 ? NaN : std(filtnan(x))
 end
 
 # Apply nanstd over a specific region in array x and option to squeeze the 
