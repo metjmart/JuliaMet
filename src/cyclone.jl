@@ -29,7 +29,7 @@ function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
     size(azmean_vt)[1] == length(r) && size(azmean_vt)[2] == length(z) ? nothing :
         throw(DimensionMismatch("Input tangential wind variable must have 
                                  dimensions of [r,z]")) 
-    @fastmath r_new = r .* ones(z)'
+    r_new = r .* ones(z)'
     # Compute the azimuthal mean RMW at each vertical level
     rmw = similar(z,Float64)
     fill!(rmw, NaN)
@@ -37,7 +37,7 @@ function calc_rmw(r::AbstractVector{<:Real},z::AbstractVector{<:Real},
     for k in eachindex(z)
         # Only store the RMW values if they're present
         if vtmax[2][k] != 0
-            rmw[k] = r_new[vtmax[2][k]]
+            @inbounds rmw[k] = r_new[vtmax[2][k]]
         end
     end
     return rmw
@@ -78,36 +78,46 @@ end
 #==============================================================================
 rankine
 
-This function will generate a 2-D Rankine vortex in polar coordinates for a 
-given rmax, vmax, and 2-D radius array.
-Input rr should be a 2-D array with dimensions of (r,phi)
-*** Assumes rmax and rr are in units of meters and vmax is m/s!!!
+This function will generate a 1-D Rankine vortex for a given rmax and vmax
+*** Assumes r and rmax are in units of meters and vmax is m/s!!!
 ===============================================================================#
 
-function rankine(rmax::Real,vmax::Real,r::AbstractVector{<:Real},
-                 phi::AbstractVector{<:Real},method::Symbol=:vt)
+function rankine(r::AbstractVector{<:Real},rmax::Real,vmax::Real,method::Symbol=:vt)
 
     if method == :vt
-        vt = Float64[]
-        for i in eachindex(r)
-            if r[i] < rmax
-                @fastmath push!(vt, vmax * r[i] / rmax)
-            else
-                @fastmath push!(vt, vmax * rmax / r[i])
-            end
-        end
-        return @fastmath vt .* ones(phi)'
+        return @fastmath [i < rmax ? vmax * i / rmax : rmax * vmax / i for i in r]
     elseif method == :vort
-        vort = Float64[]
-        for i in eachindex(r)
-            if r[i] < rmax
-                @fastmath push!(vort, 2 * vmax / rmax)
-            else
-                @fastmath push!(vort,0)
-            end
-        end
-        return @fastmath vort .* ones(phi)'
+        return @fastmath [i < rmax ? 2. * vmax / rmax : 0. for i in r]
     end
+end
+
+#==============================================================================
+modrankine
+
+This function will generate a 1-D modified Rankine vortex for a given rmax, 
+vmax, and decay parameter (alpha)
+*** Assumes r and rmax are in units of meters, vmax is m/s, and alpha is postive
+===============================================================================#
+
+function modrankine(r::AbstractVector{<:Real},rmax::Real,vmax::Real,alpha::Real)
+    return @fastmath [i < rmax ? vmax * i / rmax : vmax * (i/rmax)^-alpha for i in r]
+end
+
+#==============================================================================
+re87
+
+This function will generate a 1-D vortex profile 
+following Rotunno and Emanuel (1987; JAS; equation 37)
+Need to specify radius array, rmax, r0, vmax, coriolis force
+*** Assumes r, rmax, and r0 are in units of meters, vmax is m/s, and coriolis 
+    force is s^-1
+===============================================================================#
+
+function re87(r::AbstractVector{<:Real},rmax::Real,r0::Real,vmax::Real,fcor::Real)
+
+    vt =  sqrt.( vmax^2 * (r ./ rmax).^2 .* 
+                ( ( (2. * rmax) ./ (r + rmax) ).^3 - ( (2. * rmax) ./ (r0 + rmax) ).^3 ) + 
+                (fcor^2 * r.^2 ./ 4.) ) - (fcor * r) ./ 2.
 end
 
 #==============================================================================
@@ -122,13 +132,13 @@ See Schubert et al. (1999; JAS) for examples
 # Single data points
 
 function hermite(radius::Real)
-    return @fastmath 1. - 3. * radius^2 + 2 * radius^3
+    return @fastmath 1. - 3. * radius^2 + 2. * radius^3
 end
 
 # Vectors
 
 function hermite(radius::AbstractVector{<:Real})
-    return @fastmath 1. - 3. * radius.^2 + 2 * radius.^3
+    return @fastmath 1. - 3. * radius.^2 + 2. * radius.^3
 end
 
 #==============================================================================
