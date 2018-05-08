@@ -5,7 +5,7 @@ module JuliaMet
     using NetCDF, DataStructures, Interpolations
 
     export p_centroid
-    export calc_rmw, uv2urvt, rankine, hermite, p3swploc
+    export calc_rmw, uv2urvt, rankine, modrankine, re87, hermite, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian
     export rmnan, fourierols, wavecoeffs
     export newtoncotes, trapz2d, trapz3d
