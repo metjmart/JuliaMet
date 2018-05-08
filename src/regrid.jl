@@ -221,6 +221,27 @@ This function will regrid data on a polar grid to Cartesian coordinates
 *** Currently not handling presence of NaNs -- use caution!
 ==============================================================================#
 
+# Interpolate from radius to (x,y) -- axisymmetric application 
+ 
+function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real}, 
+                         field::AbstractVector{<:Real}) 
+ 
+    x = collect(-r[end]:r[2]-r[1]:r[end]) 
+    y = collect(-r[end]:r[2]-r[1]:r[end]) 
+    # Create 2-D grids 
+    xx,yy = grid2d(x,y) 
+    # Create the interpolation object 
+    field_xy = Array{Float64}(length(x),length(y)) 
+    field_itp = extrapolate(interpolate((r,),field,Gridded(Linear())),NaN) 
+    # Interpolate from axisymmetric polar to Cartesian 
+    for j in eachindex(y) 
+        for i in eachindex(x) 
+            @inbounds field_xy[i,j] = field_itp[sqrt(x[i]^2 + y[j]^2)] 
+        end 
+    end 
+    return field_xy 
+end 
+
 function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
                          field::AbstractArray{<:Real,2})
 
