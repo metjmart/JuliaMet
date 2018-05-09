@@ -27,7 +27,7 @@ This function will generate a 1-D Rankine vortex for a given rmax and vmax
 function rankine(radii::AbstractVector{<:Real},rmax::Real,vmax::Real,method::Symbol=:vt)
 
     if method == :vt
-        return @fastmath [r < rmax ? vmax * r / rmax : rmax * vmax / r for i in radii]
+        return @fastmath [r < rmax ? vmax * r / rmax : rmax * vmax / r for r in radii]
     elseif method == :vort
         return @fastmath [r < rmax ? 2. * vmax / rmax : 0. for r in radii]
     end
