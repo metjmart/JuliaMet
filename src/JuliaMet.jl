@@ -27,5 +27,6 @@ module JuliaMet
     include("regrid.jl")
     include("samurai_obslocs.jl")
     include("steady_frame.jl")
+    include("vortexprofs.jl")
 
 end # module
