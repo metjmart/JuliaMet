@@ -25,7 +25,6 @@ This function will generate a 1-D Rankine vortex for a given rmax and vmax
 ===============================================================================#
 
 function rankine(radii::AbstractVector{<:Real},rmax::Real,vmax::Real,method::Symbol=:vt)
-
     if method == :vt
         return @fastmath [r < rmax ? vmax * r / rmax : rmax * vmax / r for r in radii]
     elseif method == :vort
@@ -76,11 +75,9 @@ Need to specify radius array, rmax, r0, vmax, coriolis force
     force is s^-1
 ===============================================================================#
 
-function re87(r::AbstractVector{<:Real},rmax::Real,r0::Real,vmax::Real,fcor::Real)
-
-    vt =  sqrt.( vmax^2 * (r ./ rmax).^2 .*
-                ( ( (2. * rmax) ./ (r + rmax) ).^3 - ( (2. * rmax) ./ (r0 + rmax) ).^3 ) +
-                (fcor^2 * r.^2 ./ 4.) ) - (fcor * r) ./ 2.
+function re87(radii::AbstractVector{<:Real},rmax::Real,r0::Real,vmax::Real,fcor::Real)
+    @fastmath [r < r0 ? sqrt( vmax^2 * (r / rmax)^2 * ( ( (2. * rmax) ./ (r + rmax) )^3 - ( (2. * rmax) / (r0 + rmax) )^3 ) +
+                              (fcor^2 * r^2 / 4.) ) - ( (fcor * r) / 2. ) : 0. for r in radii]
 end
 
 #==============================================================================
@@ -108,7 +105,6 @@ Need to specify radius array, rmax, vmax, b, and rtc
 ===============================================================================#
 
 function wc04(radii::AbstractVector{<:Real},rmax::Real,vmax::Real,b::Real,rtc::Real)
-    
     return [r < rtc ? vmax * (r/rmax) .* ( exp.( (1 - ((r/rmax)).^b)/b ) - 
                       abs.(r - rmax) ./ (rtc-rmax) .* exp.( (1 - ((rtc/rmax)).^b)/b ) ) : 0. for r in radii]
 end
