@@ -217,30 +217,46 @@ end
 regrid_pol2cart
 
 This function will regrid data on a polar grid to Cartesian coordinates
-*** Assume data is centered on polar grid 
-*** Currently not handling presence of NaNs -- use caution!
 ==============================================================================#
 
 # Interpolate from radius to (x,y) -- axisymmetric application 
- 
-function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real}, 
-                         field::AbstractVector{<:Real}) 
- 
+
+function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{<:Real},field::AbstractVector{<:Real}) 
+
+    # Specify the x and y arrays based on r
     x = collect(-r[end]:r[2]-r[1]:r[end]) 
     y = collect(-r[end]:r[2]-r[1]:r[end]) 
-    # Create 2-D grids 
-    xx,yy = grid2d(x,y) 
     # Create the interpolation object 
     field_xy = Array{Float64}(length(x),length(y)) 
     field_itp = extrapolate(interpolate((r,),field,Gridded(Linear())),NaN) 
     # Interpolate from axisymmetric polar to Cartesian 
     for j in eachindex(y) 
         for i in eachindex(x) 
-            @inbounds field_xy[i,j] = field_itp[sqrt(x[i]^2 + y[j]^2)] 
+            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)] 
         end 
     end 
     return field_xy 
 end 
+
+# Allow x and y as input arguments to the function
+
+function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{<:Real},x::AbstractVector{<:Real},
+                         y::AbstractVector{<:Real},field::AbstractVector{<:Real}) 
+
+    # Create the interpolation object 
+    field_xy = Array{Float64}(length(x),length(y)) 
+    field_itp = extrapolate(interpolate((r,),field,Gridded(Linear())),NaN) 
+    # Interpolate from axisymmetric polar to Cartesian 
+    for j in eachindex(y) 
+        for i in eachindex(x) 
+            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)] 
+        end 
+    end 
+    return field_xy 
+end 
+
+# Interpolate from (r,phi) to (x,y)
+# ** Assumes data on polar grid are centered at (0,0)
 
 function regrid_pol2cart(r::AbstractVector{<:Real},phi::AbstractVector{<:Real},
                          field::AbstractArray{<:Real,2})
