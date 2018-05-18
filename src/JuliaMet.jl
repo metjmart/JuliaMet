@@ -14,7 +14,7 @@ module JuliaMet
     export closest_ind, grid2d, grid3d, xy2rp, regrid_xy2rp, regrid_xyz2rpz, 
            regrid_pol2cart 
     export obslocs_rtz
-    export stationary_frame
+    export steadyframe
     export rankine, modrankine, hermite, re87, cw87, wc04
 
     include("center_finding.jl")
