@@ -9,210 +9,129 @@
 # reference from Doppler radar data as described by Matejka (2002).
 #
 # Function list:
-# stationary_frame
-# More to come ...
+# steadyframe
 # *****************************************************************************
 
 #==============================================================================
-stationary_frame
+steadyframe
 
-This function computes the most steady frame of reference for one stationary 
-Doppler radar following Matejka (2002) equations (39) and (42). The function 
-assumes that the radar is always located at the center of the grid (x,y = 0,0).
+This function computes the most steady frame of reference given Doppler radar
+data following Matejka (2002).
 Three Cartesian gridded analyses are required which can be obtained from three 
 sequential volumes using Radx2Grid.
 
-Required input vars:
-t1file = Gridded Doppler radar analysis for first chronological volume
-t2file = Gridded Doppler radar analysis for second " "
-t3file = Gridded Doppler radar analysis for third " "
-U = 1d U-motion array, ideally with best guess in the specified range
-    ** Set the resolution of the array to 1 m/s to iterate over large ranges
-V = 1d V-motion array, " " 
-zr = Radar altitude which can be obtained from metadata in soloii, solo3, or
-     online   
+** Note **
+The function assumes that each of the analyses are on the same grid (i.e., use
+the same Cartesian coordinates).
+
+Currenlty supporting stationary radars with support for airborne platforms in 
+progress.
+
+Required input vars
+
+x - Cartesian x-coordinate array (meters)
+y - Cartesian y-coordinate array (meters)
+z - Cartesian z-coordinate array (meters)
+delta_t1 - Time of first analysis minus time of second analysis (seconds)
+delta_t3 - Time of third analysis minus time of second analysis
+vr1 - Gridded Doppler velocities for the first analysis (m/s)
+vr2 - Gridded Doppler velocities for the second analysis (m/s)
+vr3 - Gridded Doppler velocities for the third analysis (m/s)
+U - 1d U-motion array, ideally with best guess in the specified range
+V - 1d V-motion array, " " 
+xr - Cartesian x-location of the radar (meters)
+yr - Cartesian y-location of the radar (meters)
+zr - Radar altitude which can be obtained from metadata in soloii, solo3, or
+     online (meters)  
+rho - 3-D density for the region covered by the grid. A simple density profile
+      such as assuming an isothermal atmosphere should suffice given that the 
+      sole purpose of this variable is to give less weight to observations at 
+      high altitudes
+
 Output vars:
-Q = Matrix of values computed from (39) and (42) for U,V 
-U = From input: U-velocity 
-V = From input: V-velocity 
-numer_out = Numerator of (42) evaluated
-rho_norm = Normalizing factor (denominator) of (42) evaluated
+
+Q = Matrix of values computed following eq. (42) for either mobile (eq. 36) or 
+    stationary (eq. 39) platforms 
+numer_out = Numerator of eq. (42) computed following eq. (42) for either mobile 
+            (eq. 36) or stationary (eq. 39) platforms 
 ==============================================================================#
 
-function stationary_frame(t1file::AbstractString,t2file::AbstractString,
-                          t3file::AbstractString,U::AbstractVector{<:Real},
-                          V::AbstractVector{<:Real},zr::Real)
+# Stationary radars
+
+function steadyframe(x::AbstractVector{<:Real},y::AbstractVector{<:Real},z::AbstractVector{<:Real},
+                     delta_t1::Real,delta_t3::Real,vr1::AbstractArray{<:Real,3},
+                     vr2::AbstractArray{<:Real,3},vr3::AbstractArray{<:Real,3},
+                     U::AbstractVector{<:Real},V::AbstractVector{<:Real},xr::Real,yr::Real,zr::Real,
+                     rho::AbstractArray{<:Real,3})
                                                         
-    # Define the required input vars for each time 
-    # *** Only importing x,y,z once assuming they're identical 
-    # for each time (same grid used, radar centered)
-
-    t1vars = ["x0","y0","z0","start_time","stop_time","VG"]
-    t2vars = ["start_time","stop_time","VG"]
-    t3vars = ["start_time","stop_time","VG"]
-
-    # Read in the vars 
-
-    x,y,z,t1_start,t1_stop,vr1 = read_ncvars(t1file,t1vars)
-    t2_start,t2_stop,vr2 = read_ncvars(t2file,t2vars)
-    t3_start,t3_stop,vr3 = read_ncvars(t3file,t3vars)
-
-    # Convert x,y,z to meters
-
-    xm = x .* 1e3
-    ym = y .* 1e3
-    zm = z .* 1e3
-
-    # Create 3d x,y,z arrays
-
-    x3d,y3d,z3d = grid3d(x,y,z)    
-
-    # Convert the 3d array units to meters
-
-    x3dm = x3d .* 1e3
-    y3dm = y3d .* 1e3
-    z3dm = z3d .* 1e3
-
-    # Compute the time of each analysis as the mid point between start/end
-
-    t1 = (t1_start + t1_stop) / 2
-    t2 = (t2_start + t2_stop) / 2
-    t3 = (t3_start + t3_stop) / 2
-
-    # Compute the delta_t's
-
-    delta_t1 = t1 - t2
-    delta_t3 = t3 - t2
-
-    # Define the location of the radar 
-    # ** Assumes that radar is at center of grid
-
-    xr = 0
-    yr = 0
-
     # Get zr from metadata in solo and import into function at start
-
-    # z2 only needs to be defined once and is not dependent on U,V 
-    # see equation (13)
-
-    z2 = z3d
-
     # Compute the expected squared error terms
     # See last paragragph on pg 1039 for reference 
-
-    sigsquared_vr = 1.0
-    sigsquared_udotdot = 10.0 ^ -12
-
-    # Define the normalizing factor as the volume in equation (39)
-
-    vol_norm = length(x) * length(y) * length(z)
-
-    # Compute the density weighing factor
-    # Assume density only varies w/ z, use isothermal atmosphere
-    # Should be sufficient as it adds less weight at upper levels
-
-    rho_o = 1.225
-    H = 8000 # Scale height in meters
-    rho = rho_o .* exp(-z3dm/H)
-
-    # Now calculate the normalizing factor in equation (42)
-    # Using trapezoidal integration, make sure x,y,z are in meters!
- 
-    rho_norm = trapz_3d(xm,ym,zm,rho)
-
-    # Create the array for Q and compute it for a subset of U and V
-
+    sigsq_vr = 1.0
+    sigsq_udotdot = 1e-12
+    # Compute the density normalization factor in (42) -- independent of U,V
+    rho_norm = trapz3d(x,y,z,rho)
+    # Allocate necessary arrays -- this can't be the most efficient way to do this..
     Q = Array{Float64}(length(U),length(V))
-
-    # Output array for numerator in equation (42)
-
     numer_out = Array{Float64}(length(U),length(V))
-
-    for i in eachindex(U)
-        for j in eachindex(V) 
-
-            # Compute x, y, and z for each analysis time
+    chisq = Array{Float64}(length(x),length(y),length(z))
+    sigsq = Array{Float64}(length(x),length(y),length(z))
+    for v in eachindex(V)
+        for u in eachindex(U) 
+            # Compute x_i and y_i for each analysis time (z stays the same)
             # See equation (13)
             # ** Can use same x and y assuming all grids are identical
-            
-            x1 = x3dm .+ U[i]*(t1-t2)
-            x2 = x3dm .+ U[i]*(t2-t2)
-            x3 = x3dm .+ U[i]*(t3-t2)
-    
-            y1 = y3dm .+ V[j]*(t1-t2)
-            y2 = y3dm .+ V[j]*(t2-t2)
-            y3 = y3dm .+ V[j]*(t3-t2)
-            # z2 was defined above
-
+            x1 = x + U[u] * delta_t1
+            x2 = x + U[u] * 0.
+            x3 = x + U[u] * delta_t3
+            y1 = y + V[v] * delta_t1
+            y2 = y + V[v] * 0.
+            y3 = y + V[v] * delta_t3
             # Compute R at each time (see beneath equation 5)
-    
-            R1 = ((x1 - xr).^2) + ((y1 - yr).^2) + ((z2 - zr).^2)
-            R2 = ((x2 - xr).^2) + ((y2 - yr).^2) + ((z2 - zr).^2)
-            R3 = ((x3 - xr).^2) + ((y3 - yr).^2) + ((z2 - zr).^2)
-            
-            # Compute the p_hats (equation 40)
-    
-            p_hat12 = -delta_t1 ./ (R1 .* R2)
-            p_hat13 = (delta_t3 - delta_t1) ./ (R1 .* R3)
-            p_hat23 = delta_t3 ./ (R2 .* R3)
-            
-            # Compute the alpha_hats (equation 41)
-    
-            alpha_hatx = (delta_t1 .* delta_t3 .* (delta_t1 - delta_t3) .* 
-                         ( (x2 - xr) .+ (U[i] .* (delta_t1 + delta_t3)) )) ./ 
-                         (2.0 .* R1 .* R2 .* R3)
-
-            alpha_haty = (delta_t1 .* delta_t3 .* (delta_t1 - delta_t3) .* 
-                         ( (y2 - yr) .+ (V[j] .* (delta_t1 + delta_t3)) )) ./ 
-                         (2.0 .* R1 .* R2 .* R3)
-    
-            alpha_hatz = (delta_t1 .* delta_t3 .* (delta_t1 - delta_t3) .* z2) ./ 
-                         (2.0 .* R1 .* R2 .* R3)
-            
-            # Evaluate the numerator in (39) and include density as in (42)
-            # ** Not integrating yet!!!
- 
-            numer_intg = ( rho .* ( ((vr1 .* p_hat23) - (vr2 .* p_hat13) + (vr3 .* p_hat12)) .^2 ) ) ./ 
-                         ( (sigsquared_vr .* (p_hat23 .^2 + p_hat13 .^2 + p_hat12 .^2) ) + 
-                         (sigsquared_udotdot .* (alpha_hatx .^ 2 + alpha_haty .^2 + alpha_hatz .^2)) )
-
-            # Integrate the numerator using the trapezoidal method
-            # Make sure x,y,z are in meters!
-
-            numer = trapz_3d(xm,ym,zm,numer_intg)
-
-            # Store the numerator for each U,V
-
-            numer_out[i,j] = numer
-
-            # Compute Q for each U and V
-            # See equations (39) and (42)
-    
-            Q[i,j] = numer / rho_norm
-            
+            for k in eachindex(z)
+                for j in eachindex(y) 
+                    for i in eachindex(x)
+                        R1 = sqrt((x1[i] - xr)^2 + (y1[j] - yr)^2 + (z[k] - zr)^2)
+                        R2 = sqrt((x2[i] - xr)^2 + (y2[j] - yr)^2 + (z[k] - zr)^2)
+                        R3 = sqrt((x3[i] - xr)^2 + (y3[j] - yr)^2 + (z[k] - zr)^2)
+                        # Compute the p_hats (equation 40)
+                        p_hat12 = -delta_t1 / (R1 * R2)
+                        p_hat13 = (delta_t3 - delta_t1) / (R1 * R3)
+                        p_hat23 = delta_t3 / (R2 * R3)
+                        # Compute the alpha_hats (equation 41)
+                        alpha_hatx = (delta_t1 * delta_t3 * (delta_t1 - delta_t3) * 
+                                     ( (x2[i] - xr) + (U[u] * (delta_t1 + delta_t3)) )) / 
+                                     (2.0 * R1 * R2 * R3)
+                        alpha_haty = (delta_t1 * delta_t3 * (delta_t1 - delta_t3) * 
+                                     ( (y2[j] - yr) + (V[v] * (delta_t1 + delta_t3)) )) / 
+                                     (2.0 * R1 * R2 * R3)
+                        alpha_hatz = (delta_t1 * delta_t3 * (delta_t1 - delta_t3) * z[k]) / 
+                                     (2.0 * R1 * R2 * R3)
+                        # Compute the chi squared and sigma squared terms in (42) -- refer to (39)
+                        chisq[i,j,k] = (vr1[i,j,k] * p_hat23 - vr2[i,j,k] * p_hat13 + vr3[i,j,k] * p_hat12)^2 
+                        sigsq[i,j,k] = sigsq_vr * (p_hat23^2 + p_hat13^2 + p_hat12^2) + 
+                                       sigsq_udotdot * (alpha_hatx^2 + alpha_haty^2 + alpha_hatz^2)
+                    end
+                end
+            end
+            # Compute the numerator in (42) 
+            numer = rho .* chisq ./ sigsq
+            # Integrate the numerator using the trapezoidal method 
+            numer_out[u,v] = trapz3d(x,y,z,numer)
+            # Compute Q for each U and V (see equations 39 and 42) 
+            Q[u,v] = numer_out[u,v] / rho_norm
         end
     end 
-
     # Create 2D arrays for U and V since Q is 2D
-    
     U2d,V2d = grid2d(U,V)
-    
     # Find the index of minimum Q
-    
-    ind_Qmin = findin(Q,minimum(Q))[1]
-
+    ind_Qmin = findmin(Q)[2]
     # Find the U,V corresponding to the minimum Q
     # This is the most steady frame of reference!
-    
-    minU = U2d[ind_Qmin][1]
-    minV = V2d[ind_Qmin][1]
-    
-    println(" ")
+    minU = U2d[ind_Qmin]
+    minV = V2d[ind_Qmin]
     println("Q is minimized for U = ", minU, " and V = ", minV)
-    
-    return(Q,U,V,numer_out,rho_norm)
-
+    return(minU,minV,Q,numer_out)
 end
-
 
 
