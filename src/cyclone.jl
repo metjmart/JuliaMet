@@ -188,3 +188,67 @@ function p3swploc(filein::AbstractString)
 
 end
 
+# Allow the variables to be passed to the function
+
+function p3swploc(fl_time::AbstractVector{<:Real},fl_lat::AbstractVector{<:Real},
+                  fl_lon::AbstractVector{<:Real},heading::AbstractVector{<:Real})
+
+    # Specify the angles of the fore/aft beams given the heading of the plane
+    foreR = heading + 70.0
+    foreL = heading - 70.0
+    aftR  = heading + 110.0
+    aftL  = heading - 110.0
+    # Constrain the range of azimuth values to 0-360 degrees
+    for i in eachindex(foreR)
+        if foreR[i] > 360.0
+            foreR[i] -= 360.0
+        end
+        if foreL[i] < 0.0
+            foreL[i] += 360.0
+        end
+        if aftR[i] > 360.0
+            aftR[i] -= 360.0
+        end
+        if aftL[i] < 0.0
+            aftL[i] += 360.0
+        end
+    end 
+    # Convert the azimuth angles to math degrees
+    foreRdeg = (foreR - 90.0) .* -1.0
+    foreLdeg = (foreL - 90.0) .* -1.0
+    aftRdeg  = (aftR - 90.0) .* -1.0
+    aftLdeg  = (aftL - 90.0) .* -1.0
+    # Determine the x- and y-distances from the location of aircraft
+    # out to 67 km (range of data in sweep files)
+    foreR_xdist = 67.0 .* cos.(deg2rad.(foreRdeg))
+    foreR_ydist = 67.0 .* sin.(deg2rad.(foreRdeg)) 
+    foreL_xdist = 67.0 .* cos.(deg2rad.(foreLdeg))
+    foreL_ydist = 67.0 .* sin.(deg2rad.(foreLdeg)) 
+    aftR_xdist = 67.0 .* cos.(deg2rad.(aftRdeg))
+    aftR_ydist = 67.0 .* sin.(deg2rad.(aftRdeg)) 
+    aftL_xdist = 67.0 .* cos.(deg2rad.(aftLdeg))
+    aftL_ydist = 67.0 .* sin.(deg2rad.(aftLdeg))
+    # Determine the distance of 1 deg lat and lon at the aircraft location
+    # ** In units of km
+    fl_latrad = deg2rad.(fl_lat);
+    fac_lat = 111.13209 - 0.56605 .* cos.(2.0 .* fl_latrad)
+        + 0.00012 .* cos.(4.0 .* fl_latrad) - 0.000002 .* cos.(6.0 .* fl_latrad)
+    fac_lon = 111.41513 .* cos.(fl_latrad)
+        - 0.09455 .* cos.(3.0 .* fl_latrad) + 0.00012 .* cos.(5.0 .* fl_latrad)
+    # Take the x- and y-distances and convert them to a lat and lon 
+    # position relative to the aircraft location
+    foreR_lon = (foreR_xdist ./ fac_lon) + fl_lon
+    foreR_lat = (foreR_ydist ./ fac_lat) + fl_lat
+    foreL_lon = (foreL_xdist ./ fac_lon) + fl_lon
+    foreL_lat = (foreL_ydist ./ fac_lat) + fl_lat
+    aftR_lon = (aftR_xdist ./ fac_lon) + fl_lon
+    aftR_lat = (aftR_ydist ./ fac_lat) + fl_lat
+    aftL_lon = (aftL_xdist ./ fac_lon) + fl_lon
+    aftL_lat = (aftL_ydist ./ fac_lat) + fl_lat
+
+    return fl_time,fl_lon,fl_lat,foreR_lon,foreR_lat,foreL_lon,foreL_lat,
+           aftR_lon,aftR_lat,aftL_lon,aftL_lat
+
+end
+
+
