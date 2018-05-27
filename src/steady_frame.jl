@@ -69,8 +69,6 @@ function steadyframe(x::AbstractVector{<:Real},y::AbstractVector{<:Real},z::Abst
     # See last paragragph on pg 1039 for reference 
     sigsq_vr = 1.0
     sigsq_udotdot = 1e-12
-    # Compute the density normalization factor in (42) -- independent of U,V
-    rho_norm = trapz3d(x,y,z,rho)
     # Allocate necessary arrays -- this can't be the most efficient way to do this..
     Q = Array{Float64}(length(U),length(V))
     numer_out = Array{Float64}(length(U),length(V))
@@ -116,8 +114,12 @@ function steadyframe(x::AbstractVector{<:Real},y::AbstractVector{<:Real},z::Abst
             end
             # Compute the numerator in (42) 
             numer = rho .* chisq ./ sigsq
+            # Use numer to mask values in rho where NaNs are present
+            rho[findin(numer,NaN)] = NaN
             # Integrate the numerator using the trapezoidal method 
             numer_out[u,v] = trapz3d(x,y,z,numer)
+            # Integrate the denominator 
+            rho_norm = trapz3d(x,y,z,rho)
             # Compute Q for each U and V (see equations 39 and 42) 
             Q[u,v] = numer_out[u,v] / rho_norm
         end
