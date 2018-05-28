@@ -47,9 +47,14 @@ rho - 3-D density for the region covered by the grid. A simple density profile
       such as assuming an isothermal atmosphere should suffice given that the 
       sole purpose of this variable is to give less weight to observations at 
       high altitudes
+      ** Note: The density array needs to be masked at grid points where any
+               of the three gridded analyses have missing values
+rho_norm - Volume integral of abovementioned masked density array
 
 Output vars:
 
+minU = East-west wind velocity for which Q is minimized
+minV = North-south wind velocity for which Q is minimized
 Q = Matrix of values computed following eq. (42) for either mobile (eq. 36) or 
     stationary (eq. 39) platforms 
 numer_out = Numerator of eq. (42) computed following eq. (42) for either mobile 
@@ -62,7 +67,7 @@ function steadyframe(x::AbstractVector{<:Real},y::AbstractVector{<:Real},z::Abst
                      delta_t1::Real,delta_t3::Real,vr1::AbstractArray{<:Real,3},
                      vr2::AbstractArray{<:Real,3},vr3::AbstractArray{<:Real,3},
                      U::AbstractVector{<:Real},V::AbstractVector{<:Real},xr::Real,yr::Real,zr::Real,
-                     rho::AbstractArray{<:Real,3})
+                     rho::AbstractArray{<:Real,3},rho_norm::Real)
                                                         
     # Get zr from metadata in solo and import into function at start
     # Compute the expected squared error terms
@@ -114,12 +119,8 @@ function steadyframe(x::AbstractVector{<:Real},y::AbstractVector{<:Real},z::Abst
             end
             # Compute the numerator in (42) 
             numer = rho .* chisq ./ sigsq
-            # Use numer to mask values in rho where NaNs are present
-            rho[findin(numer,NaN)] = NaN
             # Integrate the numerator using the trapezoidal method 
             numer_out[u,v] = trapz3d(x,y,z,numer)
-            # Integrate the denominator 
-            rho_norm = trapz3d(x,y,z,rho)
             # Compute Q for each U and V (see equations 39 and 42) 
             Q[u,v] = numer_out[u,v] / rho_norm
         end
