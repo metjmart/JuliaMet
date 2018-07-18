@@ -4,7 +4,6 @@ module JuliaMet
 
     using NetCDF, DataStructures, Interpolations
 
-    export p_centroid
     export p_centroid, p_centroid2
     export calc_rmw, uv2urvt, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian

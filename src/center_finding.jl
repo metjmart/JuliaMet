@@ -26,10 +26,10 @@ The function can handle one time-step so the user must create a loop if
 the pressure centroid for each time step is desired.
 ==============================================================================#
 
-function p_centroid2(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
-                     z::AbstractVector{<:Real},prs::AbstractArray{<:Real,3},
-                     u::AbstractArray{<:Real,3},v::AbstractArray{<:Real,3},
-                     prnt_cents::Bool=false)
+function p_centroid(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
+                    z::AbstractVector{<:Real},prs::AbstractArray{<:Real,3},
+                    u::AbstractArray{<:Real,3},v::AbstractArray{<:Real,3},
+                    prnt_cents::Bool=false)
 
     # First guess is minimum pressure centroid using R = 100 km
     # at each vertical level
