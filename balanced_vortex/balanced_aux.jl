@@ -1,6 +1,6 @@
 # *****************************************************************************
 # balanced_aux.jl
-# 
+#
 # This script will house auxilary functions required to compute the balanced
 # vortex following Smith (2006; Tellus)
 # *****************************************************************************
@@ -13,8 +13,8 @@ Compute the ambient profiles for pressure and density potential temperature
 
 function ambientprof(height::Real,dbz::Real,rhoa::Real,temp::Real,theta::Real,qv::Real)
 
-    dbz > 50.0 ? dbz = 50.0 : dbz = dbz 
-    zz = 10.0^(dbz * 0.1)    
+    dbz > 50.0 ? dbz = 50.0 : dbz = dbz
+    zz = 10.0^(dbz * 0.1)
     rainmass = (zz / 14630.0)^(0.6905)
     icemass =  (zz / 670.0)^(0.5587)
     mixed_dbz = 20.0
@@ -29,7 +29,7 @@ function ambientprof(height::Real,dbz::Real,rhoa::Real,temp::Real,theta::Real,qv
     elseif dbz > 30
       icemass = rainmass
     end
-    precipmass = rainmass * (hhi - height) / melting_zone + 
+    precipmass = rainmass * (hhi - height) / melting_zone +
                  icemass * (height - hlow) / melting_zone
     height < hlow ? precipmass = rainmass : nothing
     height > hhi  ? precipmass = icemass  : nothing
@@ -38,12 +38,12 @@ function ambientprof(height::Real,dbz::Real,rhoa::Real,temp::Real,theta::Real,qv
     exner = temp/theta
     thetarho = theta * (1 + qv / 1000.0) / (1 + qv / 1000.0 + qr / 1000.0)
     return exner,thetarho
-end 
+end
 
 #==============================================================================
 writencvars
 
-This function will be used to write all the variables required by the 
+This function will be used to write all the variables required by the
 thermodynamic retrieval to a NetCDF file
 
 ** Note that this is specific to what's required in the thermodynamic retrieval
@@ -60,7 +60,7 @@ function writeout_ncvars(filename::AbstractString,coorddict,datadict::OrderedDic
     zdim = NcDim("z",coorddict["z"])
     tdim = NcDim("t",[1.0])
     # Define lon and lat variables independently since they're one-dimensional
-    lonvar = NetCDF.NcVar("lon",[xdim],t=Float64) 
+    lonvar = NetCDF.NcVar("lon",[xdim],t=Float64)
     push!(ncvars,lonvar);
     latvar = NetCDF.NcVar("lat",[ydim],t=Float64)
     push!(ncvars,latvar);
@@ -78,9 +78,7 @@ function writeout_ncvars(filename::AbstractString,coorddict,datadict::OrderedDic
     # Loop over remaining variables and push them to NetCDF file
     for (index,varname) in enumerate(keys(datadict))
         NetCDF.putvar(nc,varname,datadict[varname])
-    end 
-    return 0
-end 
-
-
-
+    end
+    ncclose(filename)
+    return nothing
+end

@@ -25,7 +25,7 @@ The function requires the input (r) to have units of meters.
 *** Assumes the radial dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dr(r::AbstractVector{<:Real},field::AbstractArray{<:Real})
+function finite_dr(r::AbstractVector{Ta},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
 
     if ndims(field) == 1 
         if length(r) != length(field)
@@ -116,7 +116,7 @@ The function requires the input (x) to have units of meters.
 *** Assumes the x-dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dx(x::AbstractVector{<:Real},field::AbstractArray{<:Real})
+function finite_dx(x::AbstractVector{Ta},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
 
     if ndims(field) == 1 
         if length(x) != length(field)
@@ -207,7 +207,7 @@ The function requires the input (y) to have units of meters.
 *** Assumes the y-dimension is the first dimension in the input array!
 ==============================================================================#
 
-function finite_dy(y::AbstractVector{<:Real},field::AbstractArray{<:Real})
+function finite_dy(y::AbstractVector{Ta},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
 
     if ndims(field) == 1
         if length(y) != length(field)
@@ -299,7 +299,7 @@ The function requires the input (z) to have units of meters.
 *** Assumes the vertical dimension is the third dimension in the input array!
 ==============================================================================#
 
-function finite_dz(z::AbstractVector{<:Real},field::AbstractArray{<:Real})
+function finite_dz(z::AbstractVector{Ta},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
 
     if ndims(field) == 1 
         if length(z) != length(field)
@@ -393,8 +393,8 @@ The function requires the input (x) and (y) to have units of meters.
     the second dimension of the input array!
 ==============================================================================#
 
-function finite_laplacian(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
-                          field::AbstractArray{<:Real})
+function finite_laplacian(x::AbstractVector{Ta},y::AbstractVector{Tb},
+                          field::AbstractArray{Tc}) where {Ta<:Real,Tb<:Real,Tc<:Real}
 
     if ndims(field) == 2
         if length(x) != size(field)[1] || length(y) != size(field)[2]
@@ -440,4 +440,3 @@ function finite_laplacian(x::AbstractVector{<:Real},y::AbstractVector{<:Real},
         error("Input variable to be differentiated must be 2-D or 3-D")
     end 
 end
-
