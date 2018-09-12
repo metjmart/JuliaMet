@@ -5,7 +5,7 @@
 # Email: jon.martinez@colostate.edu
 # Julia version: 0.6.0
 #
-# This script contains functions that will handle reading and writing NetCDF 
+# This script contains functions that will handle reading and writing NetCDF
 # files in Julia.
 #
 # Function List:
@@ -16,8 +16,8 @@
 read_ncvars
 
 This function is designed to read in specified vars from NetCDF files.
-It will remove single-dimensions when necessary and replace fill values 
-with NaNs if necessary. 
+It will remove single-dimensions when necessary and replace fill values
+with NaNs if necessary.
 
 Format for function use:
 
@@ -25,7 +25,7 @@ Define varnames as a string or an array of strings.
 Ex: varnames = "DBZ" -- Single var
 Ex: varnames = ["x","y","altitude","DBZ"] -- Array of vars
 
-mask_opt - specify whether missval or fillval should be replaced with NaN - 
+mask_opt - specify whether missval or fillval should be replaced with NaN -
            default is true
 dict_opt - specify if output type should be a dictionary - defualt is false
 ==============================================================================#
@@ -44,12 +44,12 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 # If they do, determine the fill/miss values for the variable
                 fillval = ncgetatt(ncfile,varnames[1],"_FillValue")
                 missval = ncgetatt(ncfile,varnames[1],"missing_value")
-                # Only replace fill/mask values with NaN if fill/mask values 
+                # Only replace fill/mask values with NaN if fill/mask values
                 # exist for the variable
-                if typeof(fillval) != Void
-                    vardata[findin(vardata,fillval)] = NaN
-                elseif typeof(fillval) == Void && typeof(missval) != Void
-                    vardata[findin(vardata,missval)] = NaN
+                if typeof(fillval) != Nothing
+                    vardata[findall(in(fillval),vardata)] .= NaN
+                elseif typeof(fillval) == Nothing && typeof(missval) != Nothing
+                    vardata[findall(in(missval),vardata)] .= NaN
                 end
                 #println("Succesfully read in " * varnames[1] * "!")
                 return vardata
@@ -59,11 +59,11 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 return vardata
             end
         # If not 1-d, determine if vardata has a single-dimension
-        elseif ndims(vardata) > 1        
+        elseif ndims(vardata) > 1
             # Remove single-dimension from multi-dimensional array
             for i in collect(1:ndims(vardata))
                 if size(vardata)[i] == 1
-                    vardata = squeeze(vardata,i)
+                    vardata = dropdims(vardata,dims=i)
                 end
             end
             # Determine if fill values need to be masked
@@ -71,12 +71,12 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 # If they do, determine the fill/mask values for the variable
                 fillval = ncgetatt(ncfile,varnames[1],"_FillValue")
                 missval = ncgetatt(ncfile,varnames[1],"missing_value")
-                # Only replace fill/miss values with NaN if fill/miss values 
+                # Only replace fill/miss values with NaN if fill/miss values
                 # exist for the variable
-                if typeof(fillval) != Void
-                    vardata[findin(vardata,fillval)] = NaN
-                elseif typeof(fillval) == Void && typeof(missval) != Void
-                    vardata[findin(vardata,missval)] = NaN
+                if typeof(fillval) != Nothing
+                    vardata[findall(in(fillval),vardata)] .= NaN
+                elseif typeof(fillval) == Nothing && typeof(missval) != Nothing
+                    vardata[findall(in(missval),vardata)] .= NaN
                 end
                 #println("Successfully read in " * varnames[1] * "!")
                 return vardata
@@ -85,7 +85,7 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 #println("Successfully read in " * varnames[1] * "!")
                 return vardata
             end
-        end 
+        end
     # More than one var
     elseif length(varnames) > 1
         # Create an ordered dict for the vars
@@ -101,32 +101,32 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
                 # Remove single-dimension from multi-dimensional array
                 for i in collect(1:ndims(varsdata[var]))
                     if size(varsdata[var])[i] == 1
-                        svarsdata[var] = squeeze(varsdata[var],i)
+                        svarsdata[var] = dropdims(varsdata[var],dims=i)
                     #else
-                        #svarsdata[var] = varsdata[var] 
+                        #svarsdata[var] = varsdata[var]
                     end
                 end
             #else
                 #svarsdata[var] = varsdata[var]
             end
-            # Determine if values need to be masked 
+            # Determine if values need to be masked
             if mask_opt == true
                 # If they do, determine the fill/miss values for the variable
                 fillval = ncgetatt(ncfile,var,"_FillValue")
                 missval = ncgetatt(ncfile,var,"missing_value")
-                # Only replace fill/miss values with NaN if fill/miss values 
+                # Only replace fill/miss values with NaN if fill/miss values
                 # exist for the variable
-                if typeof(fillval) != Void
-                    svarsdata[var][findin(svarsdata[var],fillval)] = NaN
-                elseif typeof(fillval) == Void && typeof(missval) != Void
-                    svarsdata[var][findin(svarsdata[var],missval)] = NaN
+                if typeof(fillval) != Nothing
+                    svarsdata[var][findall(in(fillval),svarsdata[var])] .= NaN
+                elseif typeof(fillval) == Nothing && typeof(missval) != Nothing
+                    svarsdata[var][findall(in(missval),svarsdata[var])] .= NaN
                 end
             else
                 # If no masking, just re-store the data
                 svarsdata[var] = svarsdata[var]
             end
         end
-        # Determine varsdata output type: Values or OrderedDict 
+        # Determine varsdata output type: Values or OrderedDict
         if dict_opt == true
             for var in varnames
                 #println("Successfully read in " * var * "!")
@@ -135,15 +135,11 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray,
         else
             for var in varnames
                 #println("Successfully read in " * var * "!")
-            end 
+            end
             return collect(values(svarsdata))
         end
-    else  
-       error("Failed to read in var(s), be sure to define them as a string 
+    else
+       error("Failed to read in var(s), be sure to define them as a string
               or an array of strings!")
-    end 
-end    
-
-
-
-
+    end
+end
