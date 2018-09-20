@@ -20,7 +20,7 @@ E.g., 3 for 3x3, 4 for 4x4, 5 for 5x5
 fout - Output NetCDF file name
 ==============================================================================#
 
-    fin = "./tests/samurai_XYZ_analysis.nc"
+    fin = "./test/samurai_XYZ_analysis.nc"
     vars = ["x","y","altitude","U","V"]
     
     const x,y,z,u_glob,v_glob = read_ncvars(fin,vars)
@@ -79,7 +79,7 @@ fout - Output NetCDF file name
         end
 
         # Find the radial index that maximizes the mean vt at each vertical level
-        ind_rmax = nanargmax(mean_vts[:,ind])[2]
+        ind_rmax = nanargmax(mean_vts[:,ind])
         # Use index to store final center, rmw, and std
         final_xc[ind] = prelim_xbar_centers[ind_rmax,ind]
         final_yc[ind] = prelim_ybar_centers[ind_rmax,ind]
