@@ -19,6 +19,7 @@ calc_rmw
 Determine the azimuthal mean radius of maximum tangential winds at each vertical
 level. Assumes that the input vt is the azimuthally averaged vt and has
 dimensions of r,z.
+** Note: This can be deleted once nanfindmax is generalized for dimension specification
 ==============================================================================#
 
 function calc_rmw(r::AbstractVector{Ta},z::AbstractVector{Tb},
@@ -27,16 +28,12 @@ function calc_rmw(r::AbstractVector{Ta},z::AbstractVector{Tb},
     size(azmean_vt)[1] == length(r) && size(azmean_vt)[2] == length(z) ? nothing :
         throw(DimensionMismatch("Input tangential wind variable must have
                                  dimensions of (r,z)"))
-    r_new = r .* ones(length(z))'
     # Compute the azimuthal mean RMW at each vertical level
     rmw = similar(z,Float64)
-    fill!(rmw, NaN)
-    vtmax = findmax(azmean_vt,dims=1)
     for k in eachindex(z)
+        maxind = nanargmax(azmean_vt[:,k])
         # Only store the RMW values if they're present
-        if vtmax[2][k] != 0
-            @inbounds rmw[k] = r_new[vtmax[2][k]]
-        end
+        maxind == 0 ? rmw[k] = NaN : rmw[k] = r[maxind]
     end
     return rmw
 end
