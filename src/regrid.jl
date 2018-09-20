@@ -116,7 +116,7 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{Ta},y::AbstractVector{
     field_itp = extrapolate(interpolate((x.-cx, y.-cy),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -133,7 +133,7 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{Ta},y::AbstractVector{
     field_itp = extrapolate(interpolate((x.-cx, y.-cy),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -150,7 +150,7 @@ function regrid_xy2rp(x::AbstractVector{Ta},y::AbstractVector{Tb},
     field_itp = extrapolate(interpolate((x,y),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -233,7 +233,7 @@ function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{Ta},
     # Interpolate from axisymmetric polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)]
+            @inbounds field_xy[i,j] = field_itp(sqrt((x[i]-cx)^2 + (y[j]-cy)^2))
         end
     end
     return field_xy
@@ -251,7 +251,7 @@ function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{Ta},
     # Interpolate from axisymmetric polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)]
+            @inbounds field_xy[i,j] = field_itp(sqrt((x[i]-cx)^2 + (y[j]-cy)^2))
         end
     end
     return field_xy
@@ -277,7 +277,7 @@ function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
     # Interpolate from polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt(x[i]^2 + y[j]^2), pp_cart[i,j]]
+            @inbounds field_xy[i,j] = field_itp(sqrt(x[i]^2 + y[j]^2), pp_cart[i,j])
         end
     end
     return field_xy
