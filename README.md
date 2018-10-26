@@ -43,13 +43,7 @@ push!(LOAD_PATH, "/path/to/JuliaMet/src/")
 ```
 where `"/path/to/"` is replaced by the path to the user's local copy of JuliaMet.
 This will extend the `LOAD_PATH` variable on every Julia initialization. 
-Alternatively, one could define an environment variable `JULIA_LOAD_PATH` in 
-the `~/.bashrc` file (or which ever shell is used) and then source the file
-```
-export JULIA_LOAD_PATH="/path/to/JuliaMet/src/"
-source ~/.bashrc
-```
-Either method will suffice! We should now be able to load JuliaMet as a custom
+We should now be able to load JuliaMet as a custom
 module by adding the following to the beginning of our code
 ```julia
 using JuliaMet
