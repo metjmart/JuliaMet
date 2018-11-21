@@ -440,3 +440,239 @@ function finite_laplacian(x::AbstractVector{Ta},y::AbstractVector{Tb},
         error("Input variable to be differentiated must be 2-D or 3-D")
     end 
 end
+
+#==============================================================================
+finite_ds
+
+Calculate the second-order finite difference of a specified xyz field for 
+grids that are either uniform or non-uniform
+==============================================================================#
+
+# Note: This is really sloppy. Need to consider using composite types to pass
+# around the stencils and matrices
+
+# Determine the second-order finite difference weights by solving a linear 
+# system of three equations
+
+function fd_weights(x::AbstractVector{Ta};order::Int=2) where Ta<:Real
+ 
+    order == 2 ? nothing : error("Currently only supporting second-order accurate finite differences.")
+    # Create the stencil given the order of accuracy
+    stencil = zeros(order+1)
+    # Array constructed from Kronecker delta given 0 <= m <= n
+    # where m = 1 ? delta = 1 : delta = 0
+    b = [0.,1.,0.]
+    wgts = Array{Float64}(undef,length(stencil),length(x))
+    for j in eachindex(x)
+        if j == 1 
+            stencil = [0,1,2]
+        elseif j == length(x)
+            stencil = [0,-1,-2]
+        else 
+            stencil = [-1,0,1]
+        end
+        # Matrix must be constructed for each grid point
+        a = ones(order+1,order+1)
+        for k in eachindex(stencil)
+            for m in 0:order
+                a[m+1,k] = (x[j+stencil[k]] - x[j])^m
+            end
+        end
+        wgts[:,j] = a\b
+    end
+    return wgts
+end
+
+# Apply the second-order finite difference weights to a given field to determine its derivative
+
+# General one-dimensional application
+
+function finite_ds(wgts::AbstractArray{Ta,2},field::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
+
+    if size(wgts)[2] != length(field) 
+        error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+    end
+    # Create the stencil given the order of accuracy
+    stencil = zeros(size(wgts)[1])
+    dvards = similar(field,Float64)
+    for i in eachindex(field)
+        if i == 1 
+            stencil = [i,i+1,i+2]
+        elseif i == length(field)
+            stencil = [i,i-1,i-2]
+        else
+            stencil = [i-1,i,i+1] 
+        end
+        dvards[i] = sum(wgts[:,i] .* field[stencil])
+    end
+    return dvards
+end 
+
+# x-dimension
+
+function finite_dsx(wgts::AbstractArray{Ta,2},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
+
+    # Two-dimensional variable
+    if ndims(field) == 2
+        if size(wgts)[2] != size(field)[1]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for j in 1:size(field)[2]
+            for i in 1:size(field)[1]
+                if i == 1 
+                    stencil = [i,i+1,i+2]
+                elseif i == size(field)[1]
+                    stencil = [i,i-1,i-2]
+                else
+                    stencil = [i-1,i,i+1] 
+                end
+                dvards[i,j] = sum(wgts[:,i] .* field[stencil,j])
+            end
+        end 
+        return dvards
+    # Three-dimensional variable
+    elseif ndims(field) == 3
+        if size(wgts)[2] != size(field)[1]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for k in 1:size(field)[3]
+            for j in 1:size(field)[2]
+                for i in 1:size(field)[1]
+                    if i == 1 
+                        stencil = [i,i+1,i+2]
+                    elseif i == size(field)[1]
+                        stencil = [i,i-1,i-2]
+                    else
+                        stencil = [i-1,i,i+1] 
+                    end
+                    dvards[i,j,k] = sum(wgts[:,i] .* field[stencil,j,k])
+                end
+            end
+        end 
+        return dvards
+    else 
+        error("Input variable to be differentiated cannot exceed 3 dimensions")
+    end
+end
+
+# y-dimension
+
+function finite_dsy(wgts::AbstractArray{Ta,2},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
+
+    # Two-dimensional variable
+    if ndims(field) == 2
+        if size(wgts)[2] != size(field)[2]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for j in 1:size(field)[2]
+            if j == 1 
+                stencil = [j,j+1,j+2]
+            elseif j == size(field)[2]
+                stencil = [j,j-1,j-2]
+            else
+                stencil = [j-1,j,j+1] 
+            end
+            for i in 1:size(field)[1]
+                dvards[i,j] = sum(wgts[:,j] .* field[i,stencil])
+            end
+        end 
+        return dvards
+    # Three-dimensional variable
+    elseif ndims(field) == 3
+        if size(wgts)[2] != size(field)[2]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for k in 1:size(field)[3]
+            for j in 1:size(field)[2]
+                if j == 1 
+                    stencil = [j,j+1,j+2]
+                elseif j == size(field)[2]
+                    stencil = [j,j-1,j-2]
+                else
+                    stencil = [j-1,j,j+1] 
+                end
+                for i in 1:size(field)[1]
+                    dvards[i,j,k] = sum(wgts[:,j] .* field[i,stencil,k])
+                end
+            end
+        end 
+        return dvards
+    else 
+        error("Input variable to be differentiated cannot exceed 3 dimensions")
+    end
+end
+
+# z-dimension
+
+function finite_dsz(wgts::AbstractArray{Ta,2},field::AbstractArray{Tb}) where {Ta<:Real,Tb<:Real}
+
+    # Two-dimensional variable
+    if ndims(field) == 2
+        if size(wgts)[2] != size(field)[2]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for k in 1:size(field)[2]
+            if k == 1 
+                stencil = [k,k+1,k+2]
+            elseif k == size(field)[2]
+                stencil = [k,k-1,k-2]
+            else
+                stencil = [k-1,k,k+1] 
+            end
+            for j in 1:size(field)[1]
+                dvards[j,k] = sum(wgts[:,k] .* field[j,stencil])
+            end
+        end 
+        return dvards
+    # Three-dimensional variable
+    elseif ndims(field) == 3
+        if size(wgts)[2] != size(field)[3]
+            error("There should be one set of weights for each grid point along 
+                   the dimension to be differentiated")
+        end
+        # Create the stencil given the order of accuracy
+        stencil = zeros(size(wgts)[1])
+        dvards = similar(field,Float64)
+        for k in 1:size(field)[3]
+            if k == 1 
+                stencil = [k,k+1,k+2]
+            elseif k == size(field)[3]
+                stencil = [k,k-1,k-2]
+            else
+                stencil = [k-1,k,k+1] 
+            end
+            for j in 1:size(field)[2]
+                for i in 1:size(field)[1]
+                    dvards[i,j,k] = sum(wgts[:,k] .* field[i,j,stencil])
+                end
+            end
+        end 
+        return dvards
+    else 
+        error("Input variable to be differentiated cannot exceed 3 dimensions")
+    end
+end
+
+
+
