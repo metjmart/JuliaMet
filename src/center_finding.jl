@@ -86,7 +86,7 @@ function p_centroid(x::AbstractVector{Ta},y::AbstractVector{Tb},
     # Compute the azimuthal mean tangential wind
     azmean_vt = nanmean(vt,2,true)
     # Compute the RMW and 2R80
-    vtmax = findmax(azmean_vt)
+    vtmax = nanfindmax(azmean_vt)
     rmw = r[vtmax[2]]
     r80 = closest_ind(azmean_vt[1:vtmax[2]],0.8*vtmax[1])
     two_r80 = 2.0 * r[r80]
@@ -204,7 +204,7 @@ function p_centroid2(x::AbstractVector{Ta},y::AbstractVector{Tb},
     # Compute the azimuthal mean tangential wind
     azmean_vt = nanmean(vt,2,true)
     # Compute the RMW and 2R80
-    vtmax = findmax(azmean_vt)
+    vtmax = nanfindmax(azmean_vt)
     rmw = r[vtmax[2]]
     r80 = closest_ind(azmean_vt[1:vtmax[2]],0.8*vtmax[1])
     two_r80 = 2.0 * r[r80]
@@ -252,7 +252,7 @@ function p_centroid2(x::AbstractVector{Ta},y::AbstractVector{Tb},
                 # Compute the azimuthal mean tangential wind
                 azmean_vt = nanmean(vt,2,true)
                 # Compute the new RMW and 2R80
-                vtmax = findmax(azmean_vt)
+                vtmax = nanfindmax(azmean_vt)
                 rmw = r[vtmax[2]]
                 r80 = closest_ind(azmean_vt[1:vtmax[2]],0.8*vtmax[1])
                 two_r80 = 2.0 * r[r80]
