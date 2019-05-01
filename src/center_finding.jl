@@ -176,21 +176,21 @@ to indices in the altitude array
 ==============================================================================#
 
 function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
-                      zlevs::UnitRange{Int};z=AbstractVector{zlevs},prs=AbstractArray{Tc,[:,:,zlevs]},
-                      u=AbstractArray{Td,[:,:,zlevs]},v=AbstractArray{Te,[:,:,zlevs]},
-                      prnt_cents::Bool=false) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}
+                      zlevs::UnitRange{Int},z::AbstractVector{Tc},prs::AbstractArray{Td},
+                      u::AbstractArray{Te},v::AbstractArray{Tf},
+                      prnt_cents::Bool=false) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}
 
     # First guess is minimum pressure centroid using R = 100 km
     # at each vertical level
     z2km = closest_ind(z,2.0)
-    z2km in zlevs ? nothing : error("2-km altitude must be in the subset of altitudes")
+    z2km in zlevs ? nothing : error("2-km altitude must be in the range of zlevs")
+    size(prs)[3] == size(u)[3] == size(v)[3] == length(zlevs) ? nothing :
+        error("Only input prs, u, and v arrays for the range given by zlevs")
     pp    = similar(prs)
     r,phi = xy2rp(0.,0.,x,y)
     xbar0 = similar(zlevs,Float64)
     ybar0 = similar(zlevs,Float64)
-    zind = 0
-    for k in zlevs
-        zind += 1
+    for k in eachindex(zlevs)
         min_ind = findmin(prs[:,:,k])[2]
         pminx = x[min_ind[1]]
         pminy = y[min_ind[2]]
@@ -219,13 +219,14 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
         pc_den = sum(circle_pp)
         pc_numx = sum(circle_pp .* circle_x)
         pc_numy = sum(circle_pp .* circle_y)
-        xbar0[zind] = pc_numx / pc_den;
-        ybar0[zind] = pc_numy / pc_den;
+        xbar0[k] = pc_numx / pc_den;
+        ybar0[k] = pc_numy / pc_den;
     end
     # Now use the first guess at 2 km to interpolate data
     # and find azimuthal mean RMW
-    u_rpz = regrid_xy2rp(xbar0[z2km-zlevs[1]+1],ybar0[z2km-zlevs[1]+1],x,y,r,phi,u[:,:,z2km])
-    v_rpz = regrid_xy2rp(xbar0[z2km-zlevs[1]+1],ybar0[z2km-zlevs[1]+1],x,y,r,phi,v[:,:,z2km])
+    z2km_zlev = findall(in(zlevs),z2km)[1]
+    u_rpz = regrid_xy2rp(xbar0[z2km_zlev],ybar0[z2km_zlev],x,y,r,phi,u[:,:,z2km_zlev])
+    v_rpz = regrid_xy2rp(xbar0[z2km_zlev],ybar0[z2km_zlev],x,y,r,phi,v[:,:,z2km_zlev])
     # Convert u,v at 2 km to ur,vt
     ur,vt = uv2urvt(phi,u_rpz,v_rpz)
     # Compute the azimuthal mean tangential wind
@@ -236,18 +237,16 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
     r80 = closest_ind(azmean_vt[1:vtmax[2]],0.8*vtmax[1])
     two_r80 = 2.0 * r[r80]
     # Now use 2r80 as the radius threshold
-    zind =0
-    for k in zlevs
-        zind += 1
+    for k in eachindex(zlevs)
         ixbar = 0.
         iybar = 0.
         itr = 0
         #println("==============================")
         #println("z = ",z[k]," km, k = ",k)
         #println("==============================")
-        while xbar0[zind] != ixbar && ybar0[zind] != iybar
-            ixbar = xbar0[zind]
-            iybar = ybar0[zind]
+        while xbar0[k] != ixbar && ybar0[k] != iybar
+            ixbar = xbar0[k]
+            iybar = ybar0[k]
             itr += 1
             #println("itr = ", itr)
             #println("ixbar = ", ixbar)
@@ -268,8 +267,8 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
             pc_den = sum(circle_pp)
             pc_numx = sum(circle_pp .* circle_x)
             pc_numy = sum(circle_pp .* circle_y)
-            xbar0[zind] = pc_numx / pc_den
-            ybar0[zind] = pc_numy / pc_den
+            xbar0[k] = pc_numx / pc_den
+            ybar0[k] = pc_numy / pc_den
             #println("new xbar0 = ", xbar0[k])
             #println("new ybar0 = ", ybar0[k])
         end
