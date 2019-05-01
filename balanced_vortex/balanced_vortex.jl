@@ -211,8 +211,8 @@ Branch off to the specified mode
 
         # Create interpolation objects for hydrostatic exner function
         # and thetarho at ambient profile
-        amb_hexner_itp = interpolate((zmet,),amb_hexner,Gridded(Linear()))
-        amb_thetarho_itp = interpolate((zmet,),amb_thetarho,Gridded(Linear()))
+        amb_hexner_itp = extrapolate(interpolate((zmet,),amb_hexner,Gridded(Linear())),NaN)
+        amb_thetarho_itp = extrapolate(interpolate((zmet,),amb_thetarho,Gridded(Linear())),NaN)
 
         # Compute required variables
         C = azmean_vt.^2 ./ rmet

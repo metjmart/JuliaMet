@@ -47,7 +47,7 @@ function nanmeanvt_annulus(loc::AbstractVector{Ta},r::Real,u_glob::AbstractArray
     # Save vt for rings and also compute mean vt for rings
     for j in eachindex(phi)
         for i in eachindex(rrange)
-            @inbounds vt_rings[i,j] = vt_itp[rrange[i] * cos(phi[j]), rrange[i] * sin(phi[j])]
+            @inbounds vt_rings[i,j] = vt_itp(rrange[i] * cos(phi[j]), rrange[i] * sin(phi[j]))
         end
     end
     # Return the negative of the mean vt within the annulus
@@ -105,7 +105,7 @@ function nanmeanvt_ring(x::AbstractVector{Ta},y::AbstractVector{Tb},prelim_xc::R
     vt_ring = Array{Float64}(undef,length(phi))
     # Loop over all phi and store vt at given radius
     for j in eachindex(phi)
-        @inbounds vt_ring[j] = vt_itp[radius * cos(phi[j]), radius * sin(phi[j])]
+        @inbounds vt_ring[j] = vt_itp(radius * cos(phi[j]), radius * sin(phi[j]))
     end
     return nanmean(vt_ring)
 end
