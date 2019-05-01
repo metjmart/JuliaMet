@@ -2,9 +2,9 @@ __precompile__()
 
 module JuliaMet
 
-    using DataStructures, Interpolations, LinearAlgebra, NetCDF, Statistics
+    using DataStructures, Interpolations, LinearAlgebra, NetCDF, Statistics, DelimitedFiles, DSP
 
-    export p_centroid, p_centroid2
+    export filtloop, p_centroid, p_centroid_
     export calc_rmw, uv2urvt, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian,
            fd_weights, finite_ds, finite_dsx, finite_dsy, finite_dsz
