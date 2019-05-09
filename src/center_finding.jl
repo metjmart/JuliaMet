@@ -224,7 +224,7 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
     end
     # Now use the first guess at 2 km to interpolate data
     # and find azimuthal mean RMW
-    z2km_zlev = findall(in(zlevs),z2km)[1]
+    z2km_zlev = findall(x->x==z2km,zlevs)[1]
     u_rpz = regrid_xy2rp(xbar0[z2km_zlev],ybar0[z2km_zlev],x,y,r,phi,u[:,:,z2km_zlev])
     v_rpz = regrid_xy2rp(xbar0[z2km_zlev],ybar0[z2km_zlev],x,y,r,phi,v[:,:,z2km_zlev])
     # Convert u,v at 2 km to ur,vt
