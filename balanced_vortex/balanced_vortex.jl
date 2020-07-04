@@ -29,7 +29,7 @@
 # Note: Current parameterization simply sets winds below 2 km altitude to
 #       the value at 2 km altitude
 #
-# f
+# fcor
 # Specify the Coriolis parameter for the analysis
 #
 # writeout
@@ -52,7 +52,7 @@ include("./balanced_aux.jl")
 # Specify NetCDF output file name in format required by thermodynamic retrieval
     fout = "./20151022_test_1800.nc"
 # Specify the Coriolis parameter for case at hand
-    f = 0.0000451 # Coriolis
+    fcor = 0.0000451 # Coriolis
 # Write output to NetCDF file?
     writeout = true
 #=========================== END MODIFY ======================================#
@@ -145,6 +145,10 @@ Read in all required variables for computing the balanced state
     rmet = r * 1e3
     zmet = z * 1e3
 
+    # Retrieve finite difference weights (second-order accurate for stretched grids)
+    rwgts = fd_weights(rmet)
+    zwgts = fd_weights(zmet)
+
     # Integrate the hydrostatic equation for the ambient profile
     # This will give the hydrostatic pressure at each altitude
     amb_hexner = Array{Float64}(undef,length(z))
@@ -215,9 +219,9 @@ Branch off to the specified mode
         amb_thetarho_itp = extrapolate(interpolate((zmet,),amb_thetarho,Gridded(Linear())),NaN)
 
         # Compute required variables
-        C = azmean_vt.^2 ./ rmet
+        C = azmean_vt.^2 ./ rmet + fcor * azmean_vt
         C[1,:] .= NaN # Undefined at r = 0
-        dCdz = finite_dz(zmet,C)
+        dCdz = finite_dsz(zwgts,C)
 
         # **Note: The integration only goes out to ind_prof (radius of ambient profile!)
 
