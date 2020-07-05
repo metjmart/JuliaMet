@@ -42,13 +42,14 @@ include("./balanced_aux.jl")
 
 #=========================== BEGIN MODIFY ====================================#
 # Specify the input file (currently, script formulated specific to SAMURAI)
-    fin = "../src/beta/balanced_vortex/samurai_XYZ_analysis.nc"
+    fin = "./test/samurai_XYZ_analysis.nc"
 # Choose which mode to run
     mode = "vortex_cart"
     paramBL = true
 # Specify the center location
-    cx = 0.
-    cy = 0.
+    cenfile = "./test/center_output.nc"
+    cx = mean(ncread(cenfile,"final_xc"))
+    cy = mean(ncread(cenfile,"final_yc"))
 # Specify NetCDF output file name in format required by thermodynamic retrieval
     fout = "./20151022_test_1800.nc"
 # Specify the Coriolis parameter for case at hand
@@ -145,6 +146,11 @@ Read in all required variables for computing the balanced state
     rmet = r * 1e3
     zmet = z * 1e3
 
+    # Define drmet and dzmet
+    # FLAG - Needs to be updated to account for stretched grids
+    drmet = rmet[2] - rmet[1]
+    dzmet = zmet[2] - zmet[1]
+
     # Retrieve finite difference weights (second-order accurate for stretched grids)
     rwgts = fd_weights(rmet)
     zwgts = fd_weights(zmet)
@@ -213,9 +219,8 @@ Branch off to the specified mode
             azmean_vt[:,1:BLtop] .= azmean_vt[:,BLtop]
         end
 
-        # Create interpolation objects for hydrostatic exner function
-        # and thetarho at ambient profile
-        amb_hexner_itp = extrapolate(interpolate((zmet,),amb_hexner,Gridded(Linear())),NaN)
+        # Create interpolation objects for ambient exner and thetarho profiles
+        amb_exner_itp = extrapolate(interpolate((zmet,),amb_exner,Gridded(Linear())),NaN)
         amb_thetarho_itp = extrapolate(interpolate((zmet,),amb_thetarho,Gridded(Linear())),NaN)
 
         # Compute required variables
@@ -223,21 +228,52 @@ Branch off to the specified mode
         C[1,:] .= NaN # Undefined at r = 0
         dCdz = finite_dsz(zwgts,C)
 
-        # **Note: The integration only goes out to ind_prof (radius of ambient profile!)
-
-        for k in eachindex(z)
+        # Compute the balanced pressure and density potential temperature
+        for k in 1:length(z)-1
             for i in 1:length(r[1:ind_prof])-1
-                # Don't allow NaNs along the integration path
-                if any(isnan.(C[i:ind_prof,k])) || any(isnan.(dCdz[i:ind_prof,k]))
+                z_r = 0.
+                lnthetarho = 0.
+                nan_flag = false
+                for ii in i:length(r[1:ind_prof])
+                    # Define vertical interpolation weights along the pressure surface
+                    zi = (zmet[k] - zmet[1] + z_r)/dzmet
+                    z1 = floor(zi)
+                    zw2 = zi - z1
+                    zw1 = 1.0 - zw2
+                    kk = Int(z1) + 1
+                    # Don't allow NaNs along integration path 
+                    if isnan(C[ii,kk]) || isnan(C[ii,kk+1]) || isnan(dCdz[ii,kk]) || isnan(dCdz[ii,kk+1])
+                        nan_flag = true
+                        break
+                    else
+                        # Integrate along the pressure surface
+                        C_r = C[ii,k] * zw1 + C[ii,kk+1] * zw2
+                        dCdz_r = dCdz[ii,k] * zw1 + dCdz[ii,kk+1] * zw2
+                        if ii == i || ii == length(r[1:ind_prof])
+                            z_r += 0.5 * C_r/g * drmet
+                            lnthetarho += 0.5 * dCdz_r/g * drmet
+                        else
+                            z_r += C_r/g * drmet
+                            lnthetarho += dCdz_r/g * drmet
+                        end
+                    end
+                end
+                if nan_flag 
                     pib[i,k] = NaN
                     trb[i,k] = NaN
                 else
-                    z_R = zmet[k] + newtoncotes(rmet[i:ind_prof],C[i:ind_prof,k]) / g
-                    pib[i,k] = amb_hexner_itp[z_R]
-                    trb[i,k] = exp(log(amb_thetarho_itp[z_R]) - (1. / g) * newtoncotes(rmet[i:ind_prof],dCdz[i:ind_prof,k]))
+                    # Define vertical interpolation weights at location of ambient profile
+                    zi = (zmet[k] - zmet[1] + z_r)/dzmet 
+                    z1 = floor(zi)
+                    zw2 = zi - z1
+                    zw1 = 1.0 - zw2
+                    kk = Int(z1) + 1
+                    # Define the balanced exner function and density potential temperature 
+                    pib[i,k] = amb_exner[kk] * zw1 + amb_exner[kk+1] * zw2
+                    trb[i,k] = exp(log(amb_thetarho[kk] * zw1 + amb_thetarho[kk+1] * zw2) - lnthetarho)
                 end
-            end
-        end
+            end # radius
+        end # altitude
 
         # Interpolate pib and trb to Cartesian grid
         for k in eachindex(z)
