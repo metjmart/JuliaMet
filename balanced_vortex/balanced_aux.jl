@@ -8,7 +8,7 @@
 #==============================================================================
 ambientprof
 
-Compute the ambient profiles for pressure and density potential temperature
+Compute the ambient profiles for exner function and density potential temperature
 ** Check units!
 height = km
 rhoa = kg/m^3
