@@ -3,14 +3,14 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
 # Statistical functions that properly handle the presence of NaNs.
 # Re-defining nanstats functions to more generalized applications.
 # ** Note: NaNMath package was not the solution given that you can't specify
-#         a region
+#          a region
 #
-# Adapted from Tamas_papp @: https://discourse.julialang.org/t/nanmean-options/4994
+# Adapted from Tamas_papp: https://discourse.julialang.org/t/nanmean-options/4994
 #
 # Function list:
 # nansum
@@ -47,13 +47,13 @@ end
 # Apply nansum over a specific region in array x and option to squeeze the
 # output (sout) -- default behavior is the same as Base.sum
 
-function nansum(x::AbstractArray{T},region::Int,sout::Bool=false) where T<:Real
+function nansum(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the sum over the desired region
-    xsum = mapslices(nansum,x,dims=region)
+    xsum = mapslices(nansum,x,dims=dims)
     # Squeeze singleton dim if sout = true
     if sout
-        return dropdims(xsum,dims=findmin(size(xsum))[2])
+        return dropdims(xsum,dims=dims)
     else
         return xsum
     end
@@ -75,13 +75,13 @@ end
 # Apply nanmean over a specific region in array x and option to squeeze the
 # output (sout) -- default behavior is the same as Base.mean
 
-function nanmean(x::AbstractArray{T},region::Int,sout::Bool=false) where T<:Real
+function nanmean(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the mean over the desired region
-    xmean = mapslices(nanmean,x,dims=region)
+    xmean = mapslices(nanmean,x,dims=dims)
     # Squeeze singleton dim if sout = true
     if sout
-        return dropdims(xmean,dims=findmin(size(xmean))[2])
+        return dropdims(xmean,dims=dims)
     else
         return xmean
     end
@@ -105,13 +105,13 @@ end
 # Apply nanvar over a specific region in array x and option to squeeze the
 # output (sout) -- default behavior is the same as Base.var
 
-function nanvar(x::AbstractArray{T},region::Int,sout::Bool=false) where T<:Real
+function nanvar(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the var over the desired region
-    xvar = mapslices(nanvar,x,dims=region)
+    xvar = mapslices(nanvar,x,dims=dims)
     # Squeeze singleton dim if sout = true
     if sout
-        return dropdims(xvar,dims=findmin(size(xvar))[2])
+        return dropdims(xvar,dims=dims)
     else
         return xvar
     end
@@ -135,13 +135,13 @@ end
 # Apply nanstd over a specific region in array x and option to squeeze the
 # output (sout) -- default behavior is the same as Base.std
 
-function nanstd(x::AbstractArray{T},region::Int,sout::Bool=false) where T<:Real
+function nanstd(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the std over the desired region
-    xstd = mapslices(nanstd,x,dims=region)
+    xstd = mapslices(nanstd,x,dims=dims)
     # Squeeze singleton dim if sout = true
     if sout
-        return squeeze(xstd,dims=findmin(size(xstd))[2])
+        return dropdims(xstd,dims=dims)
     else
         return xstd
     end
@@ -162,11 +162,16 @@ end
 
 # Apply nanmin over a specific region in array x
 
-function nanmin(x::AbstractArray{T},region::Int) where T<:Real
+function nanmin(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the min over the desired region
-    xmin = mapslices(nanmin,x,dims=region)
-    return xmin
+    xmin = mapslices(nanmin,x,dims=dims)
+    # Squeeze singleton dim if sout = true
+    if sout
+        return dropdims(xmin,dims=dims)
+    else
+        return xmin
+    end
 end
 
 #==============================================================================
@@ -184,11 +189,16 @@ end
 
 # Apply nanmax over a specific region in array x
 
-function nanmax(x::AbstractArray{T},region::Int) where T<:Real
+function nanmax(x::AbstractArray{T},dims::Int,sout::Bool=false) where T<:Real
 
     # Compute the min over the desired region
-    xmax = mapslices(nanmax,x,dims=region)
-    return xmax
+    xmax = mapslices(nanmax,x,dims=dims)
+    # Squeeze singleton dim if sout = true
+    if sout
+        return dropdims(xmax,dims=dims)
+    else
+        return xmax
+    end
 end
 
 #==============================================================================
@@ -206,11 +216,16 @@ end
 
 # Apply nanextrema over a specific region in array x
 
-function nanextrema(x::AbstractArray{T},region::Int) where T<:Real
+function nanextrema(x::AbstractArray{T},dims::Int) where T<:Real
 
     # Compute the extrema over the desired region
-    xextrema = mapslices(nanextrema,x,dims=region)
-    return xextrema
+    xextrema = mapslices(nanextrema,x,dims=dims)
+    # Squeeze singleton dim if sout = true
+    if sout
+        return dropdims(xextrema,dims=dims)
+    else
+        return xextrema
+    end
 end
 
 #==============================================================================
