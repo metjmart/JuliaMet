@@ -2,5 +2,7 @@
 /src/alpha/*
 /src/beta/*
 /simplex/test/*
+/simplex/alpha/*
+/simplex/beta/*
 /balanced_vortex/test/*
 /balanced_vortex/beta/*
