@@ -8,12 +8,13 @@ Operating Julia version: 1.0.0
 
 ## Package dependencies 
 
-The following packages are not included in either Julia's base or stdlib, and 
+The following packages are not included in either Julia's base or stdlib and 
 should be installed prior to using JuliaMet
 
 * [DataStructures](https://github.com/JuliaCollections/DataStructures.jl)
 * [Interpolations](https://github.com/JuliaMath/Interpolations.jl)
 * [NetCDF](https://github.com/JuliaGeo/NetCDF.jl)
+* [DSP](https://github.com/JuliaDSP/DSP.jl)
 
 This can be accomplished by first opening the Julia REPL and entering the Pkg 
 REPL-mode by hitting the `]` key.
@@ -30,14 +31,14 @@ Begin by using `git clone` to clone the repository to a local directory
 git clone https://github.com/metjmart/JuliaMet.git
 ```
 
-Since JuliaMet is not (yet) an official Julia package, it must be loaded as 
+Since JuliaMet is not an official Julia package, it must be loaded as 
 a module. This can be done by manually extending the global variable 
 `LOAD_PATH`. This variable contains the directories which Julia will search 
 for modules when calling `require`. 
 
 To extend the `LOAD_PATH` variable, open the `~/.julia/config/startup.jl` file 
 (or create it in the above specified directory if it doesn't exist) and add the following to the file
-(see the [Modules documentation](https://docs.julialang.org/en/stable/manual/modules/))
+(see the [Modules documentation](https://docs.julialang.org/en/v1/manual/modules/index.html))
 ```julia
 push!(LOAD_PATH, "/path/to/JuliaMet/src/")
 ```
@@ -78,13 +79,9 @@ using JuliaMet
 ### samurai_obslocs.jl 
 * Determine the spatial location of data input into [SAMURAI](https://github.com/mmbell/samurai)
 
-### steady_frame.jl
-* Functions used to compute the [most steady frame of reference](https://journals.ametsoc.org/doi/abs/10.1175/1520-0426(2002)019%3C1035%3AETMSFO%3E2.0.CO%3B2) given Doppler velocity observations
-
 ### vortexprofs.jl
 * Functions to create radial profiles of tangential velocity widely used to initiate tropical cyclone simulations
 
-**Disclaimer**: The functions included in JuliaMet have been primarily tested by myself and therefore may contain bugs.
+**Disclaimer**: The functions included in JuliaMet have been primarily tested by myself and may therefore contain bugs.
 Users are encouraged to examine the source code prior to using any function in JuliaMet.
 Please contribute if you discover bugs, find a more efficient way of doing something, or if you have functions you'd like to include.
-Documentation and officialization coming soon!
