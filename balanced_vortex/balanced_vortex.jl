@@ -247,8 +247,8 @@ Branch off to the specified mode
                         break
                     else
                         # Integrate along the pressure surface
-                        C_r = C[ii,k] * zw1 + C[ii,kk+1] * zw2
-                        dCdz_r = dCdz[ii,k] * zw1 + dCdz[ii,kk+1] * zw2
+                        C_r = C[ii,kk] * zw1 + C[ii,kk+1] * zw2
+                        dCdz_r = dCdz[ii,kk] * zw1 + dCdz[ii,kk+1] * zw2
                         if ii == i || ii == length(r[1:ind_prof])
                             z_r += 0.5 * C_r/g * drmet
                             lnthetarho += 0.5 * dCdz_r/g * drmet
