@@ -15,6 +15,7 @@
 # regrid_xy2rp
 # regrid_xyz2rpz
 # regrid_pol2cart
+# unstagger
 # *****************************************************************************
 
 #==============================================================================
@@ -116,7 +117,7 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{Ta},y::AbstractVector{
     field_itp = extrapolate(interpolate((x.-cx, y.-cy),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -133,7 +134,7 @@ function regrid_xy2rp(cx::Real,cy::Real,x::AbstractVector{Ta},y::AbstractVector{
     field_itp = extrapolate(interpolate((x.-cx, y.-cy),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -150,7 +151,7 @@ function regrid_xy2rp(x::AbstractVector{Ta},y::AbstractVector{Tb},
     field_itp = extrapolate(interpolate((x,y),field,Gridded(Linear())),NaN)
     for j in eachindex(phi)
         for i in eachindex(r)
-             @inbounds field_rp[i,j] = field_itp[r[i] * cos(phi[j]), r[i] * sin(phi[j])]
+             @inbounds field_rp[i,j] = field_itp(r[i] * cos(phi[j]), r[i] * sin(phi[j]))
         end
     end
     return field_rp
@@ -233,7 +234,7 @@ function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{Ta},
     # Interpolate from axisymmetric polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)]
+            @inbounds field_xy[i,j] = field_itp(sqrt((x[i]-cx)^2 + (y[j]-cy)^2))
         end
     end
     return field_xy
@@ -251,7 +252,7 @@ function regrid_pol2cart(cx::Real,cy::Real,r::AbstractVector{Ta},
     # Interpolate from axisymmetric polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt((x[i]-cx)^2 + (y[j]-cy)^2)]
+            @inbounds field_xy[i,j] = field_itp(sqrt((x[i]-cx)^2 + (y[j]-cy)^2))
         end
     end
     return field_xy
@@ -277,8 +278,68 @@ function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
     # Interpolate from polar to Cartesian
     for j in eachindex(y)
         for i in eachindex(x)
-            @inbounds field_xy[i,j] = field_itp[sqrt(x[i]^2 + y[j]^2), pp_cart[i,j]]
+            @inbounds field_xy[i,j] = field_itp(sqrt(x[i]^2 + y[j]^2), pp_cart[i,j])
         end
     end
     return field_xy
+end
+
+# Allow x and y as input (still assumes data on polar grid are centered at (0,0))
+
+function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
+                         x::AbstractVector{Tc},y::AbstractVector{Td},
+                         field::AbstractArray{Te,2}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}
+
+    # Create 2-D grids
+    xx,yy = grid2d(x,y)
+    # Transform Cartesian to polar reference points for azimuth
+    # due to atan2 returning negative values
+    pp_cart = atan.(yy,xx)
+    pp_cart[pp_cart .< 0] = pp_cart[pp_cart .< 0] .+ 2*pi
+    # Create the interpolation object
+    field_xy = Array{Float64}(undef,length(x),length(y))
+    field_itp = extrapolate(interpolate((r,phi),field,Gridded(Linear())),NaN)
+    # Interpolate from polar to Cartesian
+    for j in eachindex(y)
+        for i in eachindex(x)
+            @inbounds field_xy[i,j] = field_itp(sqrt(x[i]^2 + y[j]^2), pp_cart[i,j])
+        end
+    end
+    return field_xy
+end
+
+# Interpolate from (r,phi,z) to (x,y,z)
+# ** Assumes data at each vertical level are centered at (0,0) 
+
+function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
+                         x::AbstractVector{Tc},y::AbstractVector{Td},
+                         z::AbstractVector{Te},field::AbstractArray{Tf,3}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}
+
+    # Define the dimensions of the new var
+    field_xyz = Array{Float64}(undef,length(x),length(y),length(z))
+    # Interpolate from polar to Cartesian
+    for k in eachindex(z)
+        @inbounds field_xyz[:,:,k] = regrid_pol2cart(r,phi,x,y,field[:,:,k])
+    end
+    return field_xyz
+end
+
+#==============================================================================
+unstagger
+
+This function will take u, v, or w (vectors) on a 3-D grid and unstagger them, 
+placing them on the same grid as scalar variables
+==============================================================================#
+
+function unstagger(grid::AbstractArray{<:Real},method::Symbol=:u)
+    if method == :u
+        gridout = 0.5 * (grid[1:end-1,:,:] + grid[2:end,:,:])
+        return gridout
+    elseif method == :v
+        gridout = 0.5 * (grid[:,1:end-1,:] + grid[:,2:end,:])
+        return gridout
+    elseif method == :w
+        gridout = 0.5 * (grid[:,:,1:end-1] + grid[:,:,2:end])
+        return gridout
+    end
 end

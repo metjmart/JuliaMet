@@ -1,19 +1,35 @@
 #*******************************************************************************
 # simplex.jl
 #
-# This script will house the necessary functions to run the objective center
-# finding algorithm described by Bell and Lee (2012)
+# This script contains the functions required to run the objective center
+# finding algorithm script (objective_simplex.jl)
 #*******************************************************************************
 
 #===============================================================================
 init_config
 
-Initialize configuration for center finding algorithm given an initial center
-guess position, an rmw guess, and the number of center guesses to accompany
-the primary guess (3x3, 4x4, or 5x5 in Bell and Lee 2012; can technically
-search as many as you want but more grid points = more expensive).
-E.g., nguesses = 3 for 3x3, 4 for 4x4, 5 for 5x5
-Range of radii is set to +/- 5 km of RMW guess in increments of 1 km
+Initialize configuration for center finding algorithm
+The current setup will create nguesses^2 initial simplex locations within
++/- 10 km of the first center guess
+The range can be modified by changing the value 10. in the xinit and yinit
+definitions below
+
+Input
+xguess - x-location of first center guess (km)
+yguess - y-location of first center guess (km)
+rmwguess - first-guess radius of maximum tangential winds (km)
+nguesses - sqrt(# of grid points to initialize simplexes)
+           E.g., nguesses = 3 gives 3x3 initial simplex locations (9 total)
+
+Output
+*Note that the length of xinit and yinit correspond to the example provided
+above where there are nine (3x3) initial simplex locations (nguesses = 3)
+
+xinit - x-location for each initial center guess (km); length(xinit) = 3
+yinit - y-location for each initial center guess (km); length(yinit) = 3
+radii - radius rings centered on the first-guess RMW (km); length(radii) = 11
+        (default is +/- 5 km in 1 km increments; can be changed in simplex_aux.jl)
+
 ===============================================================================#
 
 function init_config(xguess::Real,yguess::Real,rmwguess::Real,nguesses::Real)
@@ -28,6 +44,8 @@ nanmeanvt_annulus
 
 Compute the mean tangential wind within an annulus of +/- 2 km from a specified
 radius
+*Note - The performance of this function can be greatly improved by modifying 
+        the code if there are no missing values (NaNs) present in the data 
 ===============================================================================#
 
 function nanmeanvt_annulus(loc::AbstractVector{Ta},r::Real,u_glob::AbstractArray{Tb,2},
@@ -42,16 +60,24 @@ function nanmeanvt_annulus(loc::AbstractVector{Ta},r::Real,u_glob::AbstractArray
     vt_itp = extrapolate(interpolate((x .- xc,y .- yc), vt, Gridded(Linear())), NaN)
     phi = collect(0:pi/180.:2*pi - pi/180.)
     # Define the range of radii for the annulus as +/- 2 km in 1 km intervals
+    # rrange_ is shifted back one index to compute drsq
+    rrange_ = collect(r - 3.:1.:r + 1.)
     rrange = collect(r - 2.:1.:r + 2.)
+    drsq = rrange.^2 - rrange_.^2
+    # Define arrays
     vt_rings = Array{Float64}(undef,length(rrange),length(phi))
-    # Save vt for rings and also compute mean vt for rings
+    rrings = Float64[]
+    # Compute the radius-weighted vt and store the radius weights
     for j in eachindex(phi)
         for i in eachindex(rrange)
-            @inbounds vt_rings[i,j] = vt_itp[rrange[i] * cos(phi[j]), rrange[i] * sin(phi[j])]
+            @inbounds vt_rings[i,j] = 0.5 * drsq[i] * vt_itp(rrange[i] * cos(phi[j]), rrange[i] * sin(phi[j]))
+            isnan(vt_rings[i,j]) ? push!(rrings,NaN) : push!(rrings, 0.5 * drsq[i])
         end
     end
+    # Compute the area-averaged vt within the annulus
+    vt_bar_annulus = nansum(vt_rings)/nansum(rrings)
     # Return the negative of the mean vt within the annulus
-    vt_bar_annulus = nanmean(vt_rings)
+    # Throw error if all values within the annulus were NaN
     return -vt_bar_annulus
 end
 
@@ -105,7 +131,7 @@ function nanmeanvt_ring(x::AbstractVector{Ta},y::AbstractVector{Tb},prelim_xc::R
     vt_ring = Array{Float64}(undef,length(phi))
     # Loop over all phi and store vt at given radius
     for j in eachindex(phi)
-        @inbounds vt_ring[j] = vt_itp[radius * cos(phi[j]), radius * sin(phi[j])]
+        @inbounds vt_ring[j] = vt_itp(radius * cos(phi[j]), radius * sin(phi[j]))
     end
     return nanmean(vt_ring)
 end

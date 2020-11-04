@@ -8,7 +8,13 @@
 #==============================================================================
 ambientprof
 
-Compute the ambient profiles for pressure and density potential temperature
+Compute the ambient profiles for exner function and density potential temperature
+** Check units!
+height = km
+rhoa = kg/m^3
+temp = K
+theta = K
+qv = g/kg
 ==============================================================================#
 
 function ambientprof(height::Real,dbz::Real,rhoa::Real,temp::Real,theta::Real,qv::Real)

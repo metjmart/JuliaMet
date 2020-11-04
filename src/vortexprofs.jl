@@ -10,6 +10,7 @@
 # References are included where necessary.
 #
 # rankine
+# smrankine
 # modrankine
 # hermite
 # re87
@@ -20,8 +21,15 @@
 #==============================================================================
 rankine
 
-This function will generate a 1-D Rankine vortex for a given rmax and vmax
-*** Assumes r and rmax are in units of meters and vmax is m/s!!!
+This function will generate the tangential velocity or relative vorticity
+profile for a 1-D Rankine vortex
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rmax - radius of maximum tangential winds (m)
+vmax - maximum tangential velocity (m/s)
+method - output 1-D tangential velocity profile (:vt) or relative vorticity
+         profile (:vort)
 ===============================================================================#
 
 function rankine(radii::AbstractVector{T},rmax::Real,vmax::Real,method::Symbol=:vt) where T<:Real
@@ -35,9 +43,16 @@ end
 #==============================================================================
 modrankine
 
-This function will generate a 1-D modified Rankine vortex for a given rmax,
-vmax, and decay parameter (alpha)
-*** Assumes r and rmax are in units of meters, vmax is m/s, and alpha is postive
+This function will generate the tangential velocity or relative vorticity
+profile for a 1-D modified Rankine vortex
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rmax - radius of maximum tangential winds (m)
+vmax - maximum tangential velocity (m/s)
+alpha - decay parameter (unitless; positive value)
+method - output 1-D tangential velocity profile (:vt) or relative vorticity
+         profile (:vort)
 ===============================================================================#
 
 function modrankine(radii::AbstractVector{T},rmax::Real,vmax::Real,alpha::Real,method::Symbol=:vt) where T<:Real
@@ -49,11 +64,29 @@ function modrankine(radii::AbstractVector{T},rmax::Real,vmax::Real,alpha::Real,m
 end
 
 #==============================================================================
+smrankine
+
+This function will generate the relative vorticity profile for a 1-D smoothed
+Rankine vortex following Schecter and Montgomery (2004; Phys. Fluids, eq. 37)
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rknot - radius where central vorticity decreases (m; exact if delta = 0,
+        yielding a pure Rankine vortex)
+zknot - central vorticity (s^-1)
+delta - smoothing parameter (unitless; larger values = smoother profile)
+===============================================================================#
+
+function smrankine(radii::AbstractVector{T},rknot::Real,zknot::Real,delta::Real) where T<:Real
+    return @fastmath zknot/2.0*[1.0 - tanh((r - rknot)/(rknot * delta))  for r in radii]
+end
+
+#==============================================================================
 hermite
 
 Basic cubic Hermite shape function satisfying S(0) = 1, S(1) = 0, and
 S'(0) = S'(1) = 0.
-Can be used to provide smooth transition regions for, e.g., vorticity rings.
+Can be used to create smooth transition regions (e.g., vorticity rings)
 See Schubert et al. (1999; JAS) for examples
 ===============================================================================#
 
@@ -72,11 +105,15 @@ end
 #==============================================================================
 re87
 
-This function will generate a 1-D vortex profile
-following Rotunno and Emanuel (1987, JAS - equation 37)
-Need to specify radius array, rmax, r0, vmax, coriolis force
-*** Assumes r, rmax, and r0 are in units of meters, vmax is m/s, and coriolis
-    force is s^-1
+This function will generate the tangential velocity profile for
+a 1-D vortex following Rotunno and Emanuel (1987; JAS, equation 37)
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rmax - radius of maximum tangential winds (m)
+r0 - radius where tangential velocity decreases to zero (m)
+vmax - maximum tangential velocity (m/s)
+fcor - Coriolis force (s^-1)
 ===============================================================================#
 
 function re87(radii::AbstractVector{T},rmax::Real,r0::Real,vmax::Real,fcor::Real) where T<:Real
@@ -87,11 +124,16 @@ end
 #==============================================================================
 cw87
 
-This function will generate a 1-D vortex profile following
-Chan and Williams (1987, JAS - equation 2.10)
-Need to specify radius array, rmax, vmax, and b
-*** Assumes r and rmax are in units of meters, vmax is m/s
-    b is a unitless parameter to control the shape of the outer wind profile
+This function will generate the tangential velocity or relative vorticity
+profile for a 1-D vortex following Chan and Williams (1987; JAS, equation 2.10)
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rmax - radius of maximum tangential winds (m)
+vmax - maximum tangential velocity (m/s)
+b - decay parameter  (unitless; positive value)
+method - output 1-D tangential velocity profile (:vt) or relative vorticity
+         profile (:vort)
 ===============================================================================#
 
 function cw87(radii::AbstractVector{T},rmax::Real,vmax::Real,b::Real,method::Symbol=:vt) where T<:Real
@@ -105,11 +147,15 @@ end
 #==============================================================================
 wc04
 
-This function will generate a 1-D vortex profile following
-Wong and Chan (2004, JAS - equation 2.2)
-Need to specify radius array, rmax, vmax, b, and rtc
-*** Assumes r, rmax, and rtc  are in units of meters, vmax is m/s
-    b is a unitless parameter to control the shape of the outer wind profile
+This function will generate the tangential velocity profile for a 1-D vortex
+following Wong and Chan (2004; JAS, equation 2.2)
+
+Input (and units)
+radii - vector containing radius grid points (m)
+rmax - radius of maximum tangential winds (m)
+vmax - maximum tangential velocity (m/s)
+b - decay parameter  (unitless; positive value)
+rtc - radius of the tropical cyclone circulation (m)
 ===============================================================================#
 
 function wc04(radii::AbstractVector{T},rmax::Real,vmax::Real,b::Real,rtc::Real) where T<:Real
