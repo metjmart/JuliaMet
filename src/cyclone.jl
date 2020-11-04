@@ -3,11 +3,12 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
 # This script contains functions that are more or less specific to tropical
 # cyclone related applications.
 #
+# Function list
 # calc_rmw
 # uv2urvt
 # p3swploc
@@ -72,7 +73,7 @@ end
 
 #==============================================================================
 p3swploc
-
+** Note: Has not been updated to 1.0.0
 Determine the spatial location of the fore and aft radar beams based on the
 location of the P3. The function requires the 1-sec flight level data from
 the HRD site (for example,

@@ -3,11 +3,14 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
-# This script contains a set of functions for integrating discretized data
+# This script contains a set of functions for integrating discretized data.
+# The units of the input coordinate arrays will determine the units of the
+# integrated field. E.g., for a coordinate array in meters (m), the
+# integrated field of temperature (K) will have units of K*m
 #
-# Function list:
+# Function list
 # newtoncotes
 # trapz2d
 # trapz3d
@@ -104,10 +107,9 @@ end
 trapz2d
 
 Trapezoidal integration of a 2D Cartesian grid
-** Assumes x and y are in units of meters
-Required input:
-x   = vector for x-dimension
-y   = vector for y-dimension
+Required input
+x = vector for x-dimension
+y = vector for y-dimension
 field = dependent variable with size (x,y)
 ==============================================================================#
 
@@ -132,11 +134,10 @@ end
 trapz3d
 
 Trapezoidal integration of a 3D Cartesian grid
-** Assumes x, y, and z are in units of meters
 Required input:
-x   = vector for x-dimension
-y   = vector for y-dimension
-z   = vector for z-dimension
+x = vector for x-dimension
+y = vector for y-dimension
+z = vector for z-dimension
 field = dependent variable with size (x,y,z)
 ==============================================================================#
 

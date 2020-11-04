@@ -3,20 +3,20 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
 # This script contains functions that will handle reading and writing NetCDF
 # files in Julia.
 #
-# Function List:
+# Function List
 # read_ncvars
 # *****************************************************************************
 
 #==============================================================================
 read_ncvars
 
-This function is designed to read in specified vars from NetCDF files.
-It will remove single-dimensions when necessary and replace fill values
+This function is designed to read in specified variables from NetCDF files.
+It will remove singleton dimensions when necessary and replace fill values
 with NaNs if necessary.
 
 Format for function use:

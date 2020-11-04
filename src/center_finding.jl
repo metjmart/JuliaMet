@@ -3,15 +3,15 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
 # This script contains functions for various methods of determining the center
 # of a tropical cyclone.
 #
-# Function list:
-#
+# Function list
+# filtloop
 # p_centroid (Adapted from Ellie Delap)
-# More to come ...
+# p_centroid_
 # *****************************************************************************
 
 #==============================================================================
@@ -33,9 +33,7 @@ Filter weights - default is a 1-2-1 filter, but can be modified
 
 function filtloop(field::AbstractArray{T,2},n::Int;g=[0.25,0.5,0.25]) where T<:Real
     for i in 1:n
-        #println("1", " ", extrema(field))
         field = filtfilt(g,field)
-        #println("2", " ", extrema(field))
     end
     return field
 end

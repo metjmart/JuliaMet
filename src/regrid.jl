@@ -3,11 +3,11 @@
 #
 # Author: Jonathan Martinez
 # Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 1.0.0
 #
 # This script contains functions to regrid data using various methods.
 #
-# Function list:
+# Function list
 # closest_ind
 # grid2d
 # grid3d
@@ -309,7 +309,7 @@ function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
 end
 
 # Interpolate from (r,phi,z) to (x,y,z)
-# ** Assumes data at each vertical level are centered at (0,0) 
+# ** Assumes data at each vertical level are centered at (0,0)
 
 function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
                          x::AbstractVector{Tc},y::AbstractVector{Td},
@@ -327,7 +327,7 @@ end
 #==============================================================================
 unstagger
 
-This function will take u, v, or w (vectors) on a 3-D grid and unstagger them, 
+This function will take u, v, or w (vectors) on a 3-D grid and unstagger them,
 placing them on the same grid as scalar variables
 ==============================================================================#
 
