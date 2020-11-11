@@ -309,7 +309,7 @@ function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
 end
 
 # Interpolate from (r,phi,z) to (x,y,z)
-# ** Assumes data at each vertical level are centered at (0,0) 
+# ** Assumes data at each vertical level are centered at (0,0)
 
 function regrid_pol2cart(r::AbstractVector{Ta},phi::AbstractVector{Tb},
                          x::AbstractVector{Tc},y::AbstractVector{Td},
@@ -327,7 +327,7 @@ end
 #==============================================================================
 unstagger
 
-This function will take u, v, or w (vectors) on a 3-D grid and unstagger them, 
+This function will take u, v, or w (vectors) on a 3-D grid and unstagger them,
 placing them on the same grid as scalar variables
 ==============================================================================#
 
@@ -342,4 +342,66 @@ function unstagger(grid::AbstractArray{<:Real},method::Symbol=:u)
         gridout = 0.5 * (grid[:,:,1:end-1] + grid[:,:,2:end])
         return gridout
     end
+end
+
+#==============================================================================
+curv2rect
+
+Interpolate a 2-D curvilinear (Cartesian) grid to a rectilinear (Cartesian)
+grid using inverse-distance-squared weighting
+Instead of creating 8 if-statement branches to handle the four boundaries and
+corners, just pad the output field with zeros for the boundary indices
+
+(x2d, y2d) = 2-D curvilinear coordinate arrays for x and y dimensions
+(x, y) = User-specified 1-D rectilinear coordinate arrays for x and y dimensions
+field = 2-D variable mapped on the curvilinear grid
+
+Output
+field(x,y) = 2-D variable interpolated to the specified rectilinear grid
+
+WIP - Need to add constraints for rectilinear grid to prevent function from
+going out of bounds
+==============================================================================#
+
+function curv2rect(x2d::AbstractArray{Ta,2},y2d::AbstractArray{Tb,2},
+                   x::AbstractVector{Tc},y::AbstractVector{Td},
+                   field::AbstractArray{Te,2}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real}
+
+    field_out = zeros(length(x),length(y))
+    for j in 2:length(y)-1
+        for i in 2:length(x)-1
+            # Find closest point on the curvilinear grid
+            r = sqrt.((x[i] .- x2d).^2 + (y[j] .- y2d).^2)
+            rmin_ind = Tuple(argmin(r))
+            xmin_ind = rmin_ind[1]
+            ymin_ind = rmin_ind[2]
+            # Define indices for the neighboring points in each cardinal direction
+            east_ind = (xmin_ind+1, ymin_ind)
+            west_ind = (xmin_ind-1, ymin_ind)
+            north_ind = (xmin_ind, ymin_ind+1)
+            south_ind = (xmin_ind, ymin_ind-1)
+            # Pull center point and neighboring points from each cardinal direction
+            field_cen = field[rmin_ind...]
+            field_east = field[east_ind...]
+            field_west = field[west_ind...]
+            field_north = field[north_ind...]
+            field_south = field[south_ind...]
+            # Calculate the radius weights using inverse distance squared
+            inv_rsq_cen = inv(sqrt( (x[i] - x2d[rmin_ind...])^2 + (y[j] - y2d[rmin_ind...])^2)^2 )
+            inv_rsq_east = inv(sqrt( (x[i] - x2d[east_ind...])^2 + (y[j] - y2d[east_ind...])^2)^2 )
+            inv_rsq_west = inv(sqrt( (x[i] - x2d[west_ind...])^2 + (y[j] - y2d[west_ind...])^2)^2 )
+            inv_rsq_north = inv(sqrt( (x[i] - x2d[north_ind...])^2 + (y[j] - y2d[north_ind...])^2)^2 )
+            inv_rsq_south = inv(sqrt( (x[i] - x2d[south_ind...])^2 + (y[j] - y2d[south_ind...])^2)^2 )
+            # If inverse distance squared produced Inf (distance = 0), then set weight to
+            # the value you would get from a distance = 1e-4 km (0.1 m)
+            isinf(inv_rsq_cen) ? inv_rsq_cen = inv((1e-4^2)^2) : nothing
+            # Calculate the weighted average for the given rectilinear grid point
+            field_num = (field_cen * inv_rsq_cen) + (field_east * inv_rsq_east) + (field_west * inv_rsq_west) +
+                        (field_north * inv_rsq_north) + (field_south * inv_rsq_south)
+            field_denom = inv_rsq_cen + inv_rsq_east + inv_rsq_west + inv_rsq_north + inv_rsq_south
+            # Interpolated variable
+            field_out[i,j] = field_num/field_denom
+        end
+    end
+    return field_out
 end
