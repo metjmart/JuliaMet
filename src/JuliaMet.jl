@@ -9,6 +9,7 @@ module JuliaMet
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_laplacian,
            fd_weights, finite_ds, finite_dsx, finite_dsy, finite_dsz
     export fd_weights4, finite_ds4, finite_dsx4, finite_dsy4, finite_dsz4
+    export haversine, haversined, angular_dist, atan_full, azimuth_equidist, gc_azimuth
     export rmnan, fourierols, wavecoeffs
     export newtoncotes, trapz2d, trapz3d
     export nansum, nanmean, nanvar, nanstd, nanmin, nanmax, nanextrema, nanfindmax,
@@ -23,6 +24,7 @@ module JuliaMet
     include("cyclone.jl")
     include("derivative.jl")
     include("derivative4.jl")
+    include("geodesic.jl")
     include("harmonics.jl")
     include("integrate.jl")
     include("nanstats.jl")
