@@ -42,7 +42,6 @@ function haversined(radius::Real,λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
            cosd(ϕ_c) * cosd(ϕ) * sind((λ - λ_c) / 2) ^ 2))
 end
 
-
 #==============================================================================
 invhaversine(sphere_radius::Real,radius::Real,λ_c::Real,ϕ_c::Real,θ::Real)
 
@@ -87,35 +86,21 @@ function angular_dist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 end
 
 #==============================================================================
-atan_full(ang::Real)
-
-Define a function to return atan values on the full unit circle (0, 2π)
-
-ang = Input polar angle to be converted (in radians)
-Output = Polar angle on the full unit circule (in radians)
-==============================================================================#
-
-function atan_full(ang::Real)
-    return ang < 0. ? ang += 2. * pi : ang
-end
-
-#==============================================================================
 polar_azimuth_equidist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 
 Define a function to calculate the polar angle between two points using an
 azimuthal equidistant map projection
-Return polar angles on the full unit circle (0, 2π)
 
 (λ_c, ϕ_c) = lon, lat of center point (in radians)
 (λ, ϕ) = lon, lat of second point (in radians)
-Output = polar angle between the two points on the full unit circle (in radians)
+Output = polar angle between the two points (in radians)
 ==============================================================================#
 
 function polar_azimuth_equidist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
     c = angular_dist(λ_c,ϕ_c,λ,ϕ)
     x = c * inv(sin(c)) * cos(ϕ) * sin(λ-λ_c)
     y = c * inv(sin(c)) * (cos(ϕ_c)*sin(ϕ) - sin(ϕ_c)*cos(ϕ)*cos(λ-λ_c))
-    return atan_full(atan(y,x))
+    return atan(y,x)
 end
 
 #==============================================================================
@@ -123,15 +108,14 @@ polar_gc(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 
 Define a function to calculate the azimuth angle between two points using the
 inaccurate great circle approach
-Return azimuth angles on the full unit circle (0, 2π)
 
 (λ_c, ϕ_c) = lon, lat of center point (in radians)
 (λ, ϕ) = lon, lat of second point (in radians)
-Output = polar angle between the two points on the full unit circle (in radians)
+Output = polar angle between the two points
 ==============================================================================#
 
 function polar_gc(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
     x = (λ-λ_c)*cos(ϕ)
     y = ϕ-ϕ_c
-    return atan_full(atan(y,x))
+    return atan(y,x)
 end
