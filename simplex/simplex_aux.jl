@@ -1,6 +1,12 @@
 #*******************************************************************************
 # simplex.jl
 #
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
+#
 # This script contains the functions required to run the objective center
 # finding algorithm script (objective_simplex.jl)
 #*******************************************************************************
@@ -44,8 +50,8 @@ nanmeanvt_annulus
 
 Compute the mean tangential wind within an annulus of +/- 2 km from a specified
 radius
-*Note - The performance of this function can be greatly improved by modifying 
-        the code if there are no missing values (NaNs) present in the data 
+Note - The performance of this function can be greatly improved by modifying 
+       the code if there are no missing values (NaNs) present in the data 
 ===============================================================================#
 
 function nanmeanvt_annulus(loc::AbstractVector{Ta},r::Real,u_glob::AbstractArray{Tb,2},

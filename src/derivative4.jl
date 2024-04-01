@@ -1,9 +1,11 @@
 # *****************************************************************************
 # derivative4.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia Version: 1.0.0
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
 #
 # This script contains several functions used to compute derivatives with
 # finite differencing using fourth-order accurate (5-point) stencils.
@@ -306,7 +308,3 @@ function finite_dsz4(wgts::AbstractArray{Ta,2},field::AbstractArray{Tb}) where {
         error("Input variable to be differentiated cannot exceed 3 dimensions")
     end
 end
-
-
-
-

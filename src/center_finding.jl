@@ -1,15 +1,18 @@
 # *****************************************************************************
 # center_finding.jl
+
+# Author:
+#       Jonathan Martinez
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 1.0.0
+# Julia version: 
+#       1.0.0
 #
 # This script contains functions for various methods of determining the center
 # of a tropical cyclone.
 #
 # Function list
 # filtloop
+# psi_centroid_xy
 # p_centroid (Adapted from Ellie Delap)
 # p_centroid_
 # *****************************************************************************
@@ -17,25 +20,90 @@
 #==============================================================================
 # filtloop
 
-This function smooths a given field (e.g., pressure or vorticity) n times with
-a 1-2-1 filter. Can be used to determine the center via the location of the
-smoothed mininum (in the case of pressure) or maximum (in the case of vorticity)
+Smooth a given field n times with a 1-2-1 filter (by default)
 
-field
-Two-dimensional field (x-y plane) - can be pressure, vorticity, geopotential, etc.
+filtloop(field::AbstractVector{T},n::Int;g=[0.25,0.5,0.25]) where T<:Real
 
-n
-Number of times the filter is applied
-
-g
-Filter weights - default is a 1-2-1 filter, but can be modified
+Input
+field - One-dimensional field along the axis to be smoothed 
+n - Number of times the filter is applied
+g - Filter weights - default is a 1-2-1 filter, but can be modified
+Output
+field - Smoothed field 
 ==============================================================================#
 
-function filtloop(field::AbstractArray{T,2},n::Int;g=[0.25,0.5,0.25]) where T<:Real
+function filtloop(field::AbstractVector{T},n::Int;g=[0.25,0.5,0.25]) where T<:Real
     for i in 1:n
         field = filtfilt(g,field)
     end
     return field
+end
+
+#==============================================================================
+psi_centroid_xy
+
+Generic function to calculate the centroid of a specified variable in Cartesian
+(x, y) coordinates
+
+psi_centroid_xy(xc::Real,yc::Real,r0::Real,x::AbstractVector{Ta},y::AbstractVector{Tb},
+                         psi::AbstractArray{Tc,2}) 
+
+Input
+Note - xc, yc, R0, x, and y should all have the same units!
+xc - x-coordinate for initial center guess 
+yc - y-coordinate for initial center guess 
+r0 - radius of centroid 
+x - x-coordinate vector 
+y - y-coordinate vector 
+Output
+psi - 2-D (x, y) variable for computing centroid
+==============================================================================#
+
+function psi_centroid_xy(xc::Real,yc::Real,r0::Real,x::AbstractVector{Ta},y::AbstractVector{Tb},
+                         psi::AbstractArray{Tc,2}) where {Ta<:Real,Tb<:Real,Tc<:Real}
+
+    psi_x = 0.
+    psi_y = 0.
+    denom = 0.
+    for j in eachindex(y)
+        for i in eachindex(x)
+            R = sqrt((x[i]-xc)^2 + (y[j]-yc)^2)
+            if R <= r0
+                psi_x += psi[i,j] * x[i]
+                psi_y += psi[i,j] * y[j]
+                denom += psi[i,j]
+            end
+        end
+    end
+    x_bar = psi_x/denom
+    y_bar = psi_y/denom
+    i_bar = 0.
+    j_bar = 0.
+    itr = 0
+    while !isapprox(x_bar,i_bar,atol=1e-4) && !isapprox(y_bar,j_bar,atol=1e-4)
+        i_bar = x_bar
+        j_bar = y_bar
+        itr += 1
+        psi_x = 0.
+        psi_y = 0.
+        denom = 0. 
+        #nr = 0
+        for j in eachindex(y)
+            for i in eachindex(x)
+                R = sqrt((x[i]-i_bar)^2 + (y[j]-j_bar)^2)
+                if R <= r0
+                    psi_x += psi[i,j] * x[i]
+                    psi_y += psi[i,j] * y[j]
+                    denom += psi[i,j]
+                    #nr += 1
+                end
+            end
+        end
+        x_bar = psi_x/denom
+        y_bar = psi_y/denom
+        itr > 30 && break
+    end
+    return x_bar, y_bar
 end
 
 #==============================================================================
@@ -115,16 +183,10 @@ function p_centroid(x::AbstractVector{Ta},y::AbstractVector{Tb},
             ixbar = 0.
             iybar = 0.
             itr = 0
-            #println("==============================")
-            #println("z = ",z[k]," km, k = ",k)
-            #println("==============================")
             while xbar0[k] != ixbar && ybar0[k] != iybar
                 ixbar = xbar0[k]
                 iybar = ybar0[k]
                 itr += 1
-                #println("itr = ", itr)
-                #println("ixbar = ", ixbar)
-                #println("iybar = ", iybar)
                 circle_pp = Float64[]
                 circle_x  = Float64[]
                 circle_y  = Float64[]
@@ -143,15 +205,10 @@ function p_centroid(x::AbstractVector{Ta},y::AbstractVector{Tb},
                 pc_numy = sum(circle_pp .* circle_y)
                 xbar0[k] = pc_numx / pc_den
                 ybar0[k] = pc_numy / pc_den
-                #println("new xbar0 = ", xbar0[k])
-                #println("new ybar0 = ", ybar0[k])
-            end
-            #println("z = ", z[k], "Total itrs = ",itr)
+           end
         end
     end
-    #println("---------------")
-    #println(" ")
-    if prnt_cents == true
+   if prnt_cents == true
         for k in eachindex(z)
             if k >= z2km && k <= z8km
                 println("z = ", z[k], ", xbar = ", xbar0[k], ", ybar = ", ybar0[k])
@@ -239,16 +296,10 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
         ixbar = 0.
         iybar = 0.
         itr = 0
-        #println("==============================")
-        #println("z = ",z[k]," km, k = ",k)
-        #println("==============================")
         while xbar0[k] != ixbar && ybar0[k] != iybar
             ixbar = xbar0[k]
             iybar = ybar0[k]
             itr += 1
-            #println("itr = ", itr)
-            #println("ixbar = ", ixbar)
-            #println("iybar = ", iybar)
             circle_pp = Float64[]
             circle_x  = Float64[]
             circle_y  = Float64[]
@@ -267,13 +318,8 @@ function p_centroid_(x::AbstractVector{Ta},y::AbstractVector{Tb},
             pc_numy = sum(circle_pp .* circle_y)
             xbar0[k] = pc_numx / pc_den
             ybar0[k] = pc_numy / pc_den
-            #println("new xbar0 = ", xbar0[k])
-            #println("new ybar0 = ", ybar0[k])
         end
-        #println("z = ", z[k], "Total itrs = ",itr)
     end
-    #println("---------------")
-    #println(" ")
     if prnt_cents == true
         for k in zlevs
             println("z = ", z[k], ", xbar = ", xbar0[k], ", ybar = ", ybar0[k])

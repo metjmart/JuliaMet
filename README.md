@@ -53,19 +53,22 @@ using JuliaMet
 ## Utility
 
 ### center_finding.jl
-* Functions to determine the center of a tropical cyclone 
+* Functions to determine the center of a fluid circulation
 
 ### cyclone.jl 
 * Functions to compute relevant quantities for gridded tropical cyclone data
 
 ### derivative.jl 
-* Numerical methods for computing derivatives using finite differencing
+* Numerical methods for computing the finite difference approximation to first-order derivatives with second-order accuracy 
+
+### geodesic.jl
+* Functions to compute distances and angles between points on a sphere
 
 ### harmonics.jl
 * Functions to compute discrete Fourier transforms via ordinary least squares regression
 
 ### integrate.jl
-* Numerical methods for integrating discretized data using the closed Newtown-Cotes formulae
+* Numerical methods for approximating integrals using the closed Newtown-Cotes formulae
 
 ### nanstats.jl 
 * Redefined statistical functions in Julia that handle the presence of NaNs
@@ -79,9 +82,12 @@ using JuliaMet
 ### samurai_obslocs.jl 
 * Determine the spatial location of data input into [SAMURAI](https://github.com/mmbell/samurai)
 
-### vortexprofs.jl
-* Functions to create radial profiles of tangential velocity widely used to initiate tropical cyclone simulations
+### thermo.jl
+* Functions to calculate and convert various thermodynamic quantities 
 
-**Disclaimer**: The functions included in JuliaMet have been primarily tested by myself and may therefore contain bugs.
-Users are encouraged to examine the source code prior to using any function in JuliaMet.
-Please contribute if you discover bugs, find a more efficient way of doing something, or if you have functions you'd like to include.
+### vortexprofs.jl
+* Functions to create analytical vortex profiles of tangential (azimuthal) velocity 
+
+**Disclaimer**: The functions contained in JuliaMet have primarily been tested by myself for specfic use-cases and thus are likely to be deficient along many dimensions.
+Users are encouraged to examine the source code prior to implementing any function in JuliaMet.
+Please feel free to contribute if you discover bugs, find a more efficient way of doing something, or if you have functions you'd like to include!

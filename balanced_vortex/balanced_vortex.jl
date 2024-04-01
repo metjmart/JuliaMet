@@ -1,9 +1,15 @@
 # *****************************************************************************
 # balanced_vortex.jl
 #
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
+#
 # This script will compute the balanced state of a vortex following
 # Smith (2006; Tellus).
-
+#
 # Description of variables to be modified by user
 #
 # fin, fout

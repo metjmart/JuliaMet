@@ -1,13 +1,17 @@
 # *****************************************************************************
 # vortexprofs.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
 #
 # This script contains functions to create radial profiles of tangential wind
 # for vortices widely used to initiate model simulations of tropical cyclones.
 # References are included where necessary.
+#
+# Function list
 #
 # rankine
 # smrankine
@@ -90,16 +94,10 @@ Can be used to create smooth transition regions (e.g., vorticity rings)
 See Schubert et al. (1999; JAS) for examples
 ===============================================================================#
 
-# Single data points
+# Single data points--use dot broadcasting for vectors and arrays
 
 function hermite(radii::Real)
     return @fastmath 1. - 3. * radii^2 + 2. * radii^3
-end
-
-# Vectors
-
-function hermite(radii::AbstractVector{T}) where T<:Real
-    return @fastmath 1. .- 3. * radii.^2 + 2. * radii.^3
 end
 
 #==============================================================================
@@ -117,8 +115,8 @@ fcor - Coriolis force (s^-1)
 ===============================================================================#
 
 function re87(radii::AbstractVector{T},rmax::Real,r0::Real,vmax::Real,fcor::Real) where T<:Real
-    @fastmath [r < r0 ? sqrt( vmax^2 * (r / rmax)^2 * ( ( (2. * rmax) ./ (r + rmax) )^3 - ( (2. * rmax) / (r0 + rmax) )^3 ) +
-                              (fcor^2 * r^2 / 4.) ) - ( (fcor * r) / 2. ) : 0. for r in radii]
+    return @fastmath [r < r0 ? sqrt( vmax^2 * (r / rmax)^2 * ( ( (2. * rmax) ./ (r + rmax) )^3 - ( (2. * rmax) / (r0 + rmax) )^3 ) +
+                                     (fcor^2 * r^2 / 4.) ) - ( (fcor * r) / 2. ) : 0. for r in radii]
 end
 
 #==============================================================================
@@ -140,7 +138,7 @@ function cw87(radii::AbstractVector{T},rmax::Real,vmax::Real,b::Real,method::Sym
     if method == :vt
         return @fastmath vmax * (radii/rmax) .* exp.( (1/b) * (1 .- (radii/rmax).^b) )
     elseif method == :vort
-        (2 * vmax) / rmax * (1 .- 0.5 * (radii/rmax).^b) .* exp.( (1/b) * (1 .- (radii/rmax).^b) )
+        return (2 * vmax) / rmax * (1 .- 0.5 * (radii/rmax).^b) .* exp.( (1/b) * (1 .- (radii/rmax).^b) )
     end
 end
 

@@ -1,12 +1,15 @@
 # *****************************************************************************
 # derivative.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia Version: 1.0.0
+# Author:
+#       Jonathan Martinez
 #
-# This script contains several functions used to compute derivatives with
-# finite differencing using second-order accurate (3-point) stencils.
+# Julia version: 
+#       1.0.0
+#
+# This script contains several functions used to compute finite difference 
+# approximations to derivatives
+#
 # The units of the input coordinate arrays will determine the units of the
 # differentiated field. E.g., for a coordinate array in meters (m), the
 # differentiated field of temperature (K) will have units of K/m
@@ -17,11 +20,15 @@
 # finite_dy
 # finite_dz
 # finite_laplacian
+# kron_delta
 # fd_weights
 # finite_ds
 # finite_dsx
 # finite_dsy
 # finite_dsz
+# diff1
+# spdiff1
+# Laplacian
 # *****************************************************************************
 
 #==============================================================================
@@ -387,12 +394,37 @@ function finite_dz(z::AbstractVector{Ta},field::AbstractArray{Tb}) where {Ta<:Re
 end
 
 #==============================================================================
+finite_dt
+
+Calculate the time derivative of a 1-D variable with the following criteria:
+
+- Forward difference = First-order accurate
+- Centered diffeference = Second-order accurate
+- Backward difference = First-order accurate
+==============================================================================#
+
+function finite_dt(ti::AbstractVector{Ta},field::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
+
+    dvardt = zeros(length(ti))
+    for n in eachindex(ti)
+        if n == 1
+            dvardt[n] = (field[n+1] - field[n]) / (ti[n+1] - ti[n]) 
+        elseif n == length(ti)
+            dvardt[n] = (field[n] - field[n-1]) / (ti[n] - ti[n-1])
+        else 
+            dvardt[n] = (field[n+1] - field[n-1]) / (ti[n+1] - ti[n-1])
+        end
+    end 
+    return dvardt
+end
+
+#==============================================================================
 finite_laplacian
 
 Calculate the laplacian of a specified field on a Cartesian grid.
-*** Assumes x and y grid spacing are identical
-*** Assumes the x-dimension is the first dimension and that the y-dimension is
-    the second dimension of the input array!
+- Assumes x and y grid spacing are uniform (not necessarily equal)
+- Assumes the x-dimension is the first dimension and that the y-dimension is
+  the second dimension of the input array
 ==============================================================================#
 
 function finite_laplacian(x::AbstractVector{Ta},y::AbstractVector{Tb},
@@ -403,64 +435,67 @@ function finite_laplacian(x::AbstractVector{Ta},y::AbstractVector{Tb},
             error("Input variable to be differentiated must have dimensions of
                   (x,y)")
         end
-        hx = (x[2]-x[1])^2
-        hy = (y[2]-y[1])^2
-        out = similar(field,Float64)
-        fill!(out, NaN)
+        dx = (x[2]-x[1])^2
+        dy = (y[2]-y[1])^2
+        out = zeros(length(x),length(y))
         # Loop over all dimensions to compute the Laplacian
-        for j in 2:length(y) - 1
-            for i in 2:length(x) - 1
-                out[i,j] = (field[i+1,j] + field[i-1,j])/hx +
-                           (field[i,j+1] + field[i,j-1])/hy
+        for j in 2:length(y)-1
+            for i in 2:length(x)-1
+                out[i,j] = (field[i+1,j] - 2. * field[i,j] + field[i-1,j])/dx +
+                           (field[i,j+1] -2. * field[i,j] + field[i,j-1])/dy
             end
         end
-
         return out
     elseif ndims(field) == 3
-        # Define the dimensions of the input variable
-        d1,d2,d3 = size(field)
         if length(x) != size(field)[1] || length(y) != size(field)[2]
             error("Input variable to be differentiated must have dimensions of
                    (x,y,z)")
         end
-        hx = (x[2]-x[1])^2
-        hy = (y[2]-y[1])^2
-        out = similar(field,Float64)
-        fill!(out, NaN)
+        dx = (x[2]-x[1])^2
+        dy = (y[2]-y[1])^2
+        out = zeros(length(x),length(y))
         # Loop over all dimensions to compute the Laplacian
         for k in 1:size(field)[3]
-            for j in 2:length(y) - 1
-                for i in 2:length(x) - 1
-                   out[i,j,k] = (field[i+1,j,k] + field[i-1,j,k])/hx +
-                                (field[i,j+1,k] + field[i,j-1,k])/hy
+            for j in 2:length(y)-1
+                for i in 2:length(x)-1
+                   out[i,j,k] = (field[i+1,j,k] -2. * field[i,j] + field[i-1,j,k])/dx +
+                                (field[i,j+1,k] -2. * field[i,j] + field[i,j-1,k])/dy
                 end
             end
         end
-
         return out
-    else
-        error("Input variable to be differentiated must be 2-D or 3-D")
     end
 end
+
+#==============================================================================
+kron_delta
+
+Define the Kronecker Delta for constructing an lth-order derivative with
+nth order of accuracy $\delta_{m,l}$ 
+
+m = l ? delta = 1 : delta = 0 (where n = order; l = lth derivative)
+
+- l = order of derivative (e.g., 1 for first derivative)
+- n = order of accuracy (e.g., 2 for second-order accurate)
+==============================================================================#
+
+kron_delta(l::Int,n::Int) = [m == l ? 1. : 0. for m in 0:n+l-1]
 
 #==============================================================================
 fd_weights
 
 Determine the second-order finite difference weights for either uniform or
 non-uniform grids by solving a linear system of three equations
-Note: This is really sloppy. Need to consider using composite types to pass
-around the stencils and matrices
 ==============================================================================#
 
-function fd_weights(x::AbstractVector{Ta};order::Int=2) where Ta<:Real
+function fd_weights(x::AbstractVector{Ta};l::Int=1,n::Int=2) where Ta<:Real
 
-    order == 2 ? nothing : error("Currently only supporting second-order accurate finite differences.")
+    n == 2 ? nothing : error("Currently only supporting second-order accurate finite differences.")
     # Create the stencil given the order of accuracy
-    stencil = zeros(order+1)
-    # Array b constructed from Kronecker delta given 0 <= m <= n
-    # m = 1 ? delta = 1 : delta = 0 (where n = order)
-    b = [0.,1.,0.]
-    wgts = Array{Float64}(undef,length(stencil),length(x))
+    stencil = zeros(n+1)
+    # Array b constructed from Kronecker delta for lth-order derivative with nth-order accuracy
+    b = kron_delta(l,n)
+    wgts = zeros(n+1,length(x))
     for j in eachindex(x)
         if j == 1
             stencil = [0,1,2]
@@ -470,9 +505,9 @@ function fd_weights(x::AbstractVector{Ta};order::Int=2) where Ta<:Real
             stencil = [-1,0,1]
         end
         # Matrix must be constructed for each grid point
-        a = ones(order+1,order+1)
+        a = ones(n+1,n+1)
         for k in eachindex(stencil)
-            for m in 0:order
+            for m in 0:n
                 a[m+1,k] = (x[j+stencil[k]] - x[j])^m
             end
         end
@@ -676,4 +711,38 @@ function finite_dsz(wgts::AbstractArray{Ta,2},field::AbstractArray{Tb}) where {T
     else
         error("Input variable to be differentiated cannot exceed 3 dimensions")
     end
+end
+
+#==============================================================================
+diff1
+
+Construct the (m+1) x m first derivative matrix D, not including the 1/ds factor
+==============================================================================#
+
+diff1(m::Real) = [[1.0 zeros(1,m-1)]; diagm(1=>ones(m-1)) - I]
+
+#==============================================================================
+spdiff1
+
+Construct the sparse first derivative matrix D
+==============================================================================#
+
+spdiff1(m::Real) = sparse(diff1(m))
+
+#==============================================================================
+Laplacian
+
+Construct the sparse, discrete 2-D Laplacian operator 
+==============================================================================#
+
+function Laplacian(x::AbstractVector{Ta},y::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
+    dx = x[2]-x[1]
+    dy = y[2]-y[1]
+    nx = length(x)
+    ny = length(y)
+    Dx = spdiff1(nx) / dx
+    Dy = spdiff1(ny) / dy
+    Ax = -transpose(Dx) * Dx
+    Ay = -transpose(Dy) * Dy
+    return kron(sparse(1.0I,ny,ny), Ax) + kron(Ay, sparse(1.0I,nx,nx))
 end

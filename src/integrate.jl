@@ -1,9 +1,11 @@
 # *****************************************************************************
 # integrate.jl
+
+# Author:
+#       Jonathan Martinez
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 1.0.0
+# Julia version: 
+#       1.0.0
 #
 # This script contains a set of functions for integrating discretized data.
 # The units of the input coordinate arrays will determine the units of the

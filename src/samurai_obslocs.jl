@@ -1,16 +1,18 @@
 # *****************************************************************************
 # samurai_obslocs.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
 #
 # -- Adapted from Ellie Delap -- 
 #
 # This script contains functions that will be utilized in determining and 
 # plotting the location of SAMURAI observations. 
 # 
-# Function List:
+# Function list
 # obslocs_rtz
 # *****************************************************************************
 
