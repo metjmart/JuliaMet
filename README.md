@@ -2,27 +2,9 @@
 
 ## Introduction
 
-Functions developed to analyze gridded meteorological data and model output. 
+Simple module developed to analyze gridded meteorological data and model output. 
 
 Operating Julia version: 1.0.0
-
-## Package dependencies 
-
-The following packages are not included in either Julia's base or stdlib and 
-should be installed prior to using JuliaMet
-
-* [DataStructures](https://github.com/JuliaCollections/DataStructures.jl)
-* [Interpolations](https://github.com/JuliaMath/Interpolations.jl)
-* [NetCDF](https://github.com/JuliaGeo/NetCDF.jl)
-* [DSP](https://github.com/JuliaDSP/DSP.jl)
-
-This can be accomplished by first opening the Julia REPL and entering the Pkg 
-REPL-mode by hitting the `]` key.
-Then, packages can be added via the following command
-```julia
-add <pkgname>
-```
-where `<pkgname>` is replaced by any of the package names listed above.
 
 ## Installation
 
@@ -44,6 +26,29 @@ push!(LOAD_PATH, "/path/to/JuliaMet/src/")
 ```
 where `"/path/to/"` is replaced by the path to the user's local copy of JuliaMet.
 This will extend the `LOAD_PATH` variable on every Julia initialization. 
+
+## Package dependencies 
+
+`Project.toml` and `Manifest.toml` files have been included to instantiate an
+environment with all the necessary package dependencies for running JuliaMet.
+Note that JuliaMet has not been updated since Julia v1.0. 
+
+To create the JuliaMet environment, initiate the Julia REPL from the `JuliaMet/` 
+directory and hit the `]` key to enter the Pkg REPL-mode. Then, run the following
+sequence of commands
+```julia
+activate .
+instantiate
+```
+Once the JuliaMet environment has been resolved, subsequent executions of Julia code
+dependent on JuliaMet can be executed from the command line via
+```bash
+julia --project=/path/to/JuliaMet
+```
+where `"/path/to/"` is replaced by the path to the user's local copy of JuliaMet.
+
+## Run
+
 We should now be able to load JuliaMet as a custom
 module by adding the following to the beginning of our code
 ```julia
@@ -87,7 +92,3 @@ using JuliaMet
 
 ### vortexprofs.jl
 * Functions to create analytical vortex profiles of tangential (azimuthal) velocity 
-
-**Disclaimer**: The functions contained in JuliaMet have primarily been tested by myself for specfic use-cases and thus are likely to be deficient along many dimensions.
-Users are encouraged to examine the source code prior to implementing any function in JuliaMet.
-Please feel free to contribute if you discover bugs, find a more efficient way of doing something, or if you have functions you'd like to include!
