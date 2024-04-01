@@ -1,18 +1,16 @@
 # *****************************************************************************
 # nanstats.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 1.0.0
+# Author:
+#       Jonathan Martinez
 #
-# Statistical functions that properly handle the presence of NaNs.
-# Re-defining nanstats functions to more generalized applications.
-# ** Note: NaNMath package was not the solution given that you can't specify
-#          a region
+# Julia version: 
+#       1.0.0
 #
+# Statistical functions that properly handle the presence of NaNs
 # Adapted from Tamas_papp: https://discourse.julialang.org/t/nanmean-options/4994
 #
-# Function list:
+# Function list
 # nansum
 # nanmean
 # nanvar

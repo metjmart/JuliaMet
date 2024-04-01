@@ -1,13 +1,19 @@
 # *****************************************************************************
 # objective_simplex
 #
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
+#
 # Top-level script
 # Following Lee and Marks (2000; MWR) and section 2 of Bell and Lee (2012; JAMC)
 # Determine the optimal center location of a tropical cyclone circulation
 # The objective simplex center-finding algorithm will launch several simplexes
 # at a specified number of grid points for an initial center and RMW guess.
-# *Note - This script was developed to handle observational analyses that 
-#         contain missing values (NaNs)
+# Note - This script was developed to handle observational analyses that 
+#        contain missing values (NaNs)
 # *****************************************************************************
 
 using JuliaMet, Interpolations, Optim, NetCDF, DelimitedFiles, Statistics

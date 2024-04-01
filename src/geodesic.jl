@@ -1,7 +1,21 @@
 # *****************************************************************************
 # geodesic.jl
 #
-# Functions to calculate the distance between two points on a sphere
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
+#
+# Functions to calculate the distance and angle between two points on a sphere
+#
+# Function list
+# haversine
+# haversined
+# invhaversine
+# angular_dist
+# polar_azimuth_equidist
+# polar_gc
 # *****************************************************************************
 
 #==============================================================================
@@ -9,7 +23,7 @@ haversine(radius::Real,λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 
 Define the haversine function to calculate the great circle distance between two
 points on a sphere
-See Snyder (1987), pg. 30
+See Snyder (1987), pg. 30 - Eq. (5-3a)
 
 (λ_c, ϕ_c) = lon, lat of center point (in radians)
 (λ, ϕ) = lon, lat of second point (in radians)
@@ -29,7 +43,7 @@ Same as haversine(), but input coordinates in degrees
 
 Define the haversine function to calculate the great circle distance between two
 points on a sphere
-See Snyder (1987), pg. 30
+See Snyder (1987), pg. 30 - Eq. (5-3a)
 
 (λ_c, ϕ_c) = lon, lat of center point (in degrees)
 (λ, ϕ) = lon, lat of second point (in degrees)
@@ -47,14 +61,17 @@ invhaversine(sphere_radius::Real,radius::Real,λ_c::Real,ϕ_c::Real,θ::Real)
 
 Invert the haversine equation to calculate a (lon, lat) destination point on the
 sphere given a (lon, lat) origin point, the distance traveled, and the heading
+See Snyder (1987), pg. 31 - Eqs. (5-5) and (5-6)
+* Note that the definition of c in the equation below has changed from the 
+  haversine formula in Eq. (5-3a). c now represents the arc (angular) distance
 
 sphere_radius = radius of sphere (units in = units out)
 radius = distance traveled on sphere (same units as sphere_radius)
 (λ_c, ϕ_c) = lon, lat of origin point (in radians)
 theta = polar angle for the heading (note: this follows the mathematical
-convention for polar angles where east = 0; north = π/2; west = π/2,
-and south = 3π/2. The function will convert the polar angle to the meteorological
-azimuth angle)
+convention for polar angles where angles increase counter-clockwise
+The function will convert the polar angle to the meteorological azimuth angle
+necessary for the calculation)
 Output: (λ, ϕ) = Tuple with lon, lat of destination point (in radians)
 ==============================================================================#
 
@@ -71,7 +88,7 @@ angular_dist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 
 Define a function to calculate the angular distance between two points using
 the Law of Cosines
-See Snyder (1987), pg. 30
+See Snyder (1987), pg. 30 - Eq. (5-3a)
 
 Note - This is just the haversine formula absent the radius factor
 
@@ -90,10 +107,11 @@ polar_azimuth_equidist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)
 
 Define a function to calculate the polar angle between two points using an
 azimuthal equidistant map projection
+See Snyder (1987), pg. 195 - Eqs. (22-4) and (22-5)
 
 (λ_c, ϕ_c) = lon, lat of center point (in radians)
 (λ, ϕ) = lon, lat of second point (in radians)
-Output = polar angle between the two points (in radians)
+Output = polar angle θ between the two points (in radians, θ ϵ [-π, π]) 
 ==============================================================================#
 
 function polar_azimuth_equidist(λ_c::Real,ϕ_c::Real,λ::Real,ϕ::Real)

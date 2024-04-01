@@ -1,8 +1,18 @@
 # *****************************************************************************
 # balanced_aux.jl
+# 
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
 #
 # This script will house auxilary functions required to compute the balanced
 # vortex following Smith (2006; Tellus)
+#
+# Function list
+# ambientprof
+# writeout_ncvars
 # *****************************************************************************
 
 #==============================================================================

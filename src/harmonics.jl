@@ -1,87 +1,54 @@
 # *****************************************************************************
 # harmonics
+# 
+# Author:
+#       Jonathan Martinez
 #
-# This script contains functions that are utilized to decompose the azimuth
-# of a TC into a harmonic series. This is done via ordinary least squares
-# regression where the basis functions are a series of sin and cos waves.
-# The functions can also be generalized for other applications where Fourier
-# decomposition is desired.
+# Julia version: 
+#       1.0.0
+#
+# Functions to construct a Fourier series via ordinary least squares regression
+# and retrieve the harmonics corresponding to each integer wavenumber 
+#
+# Function list
+# fourierols
+# regress_harmonics
 # *****************************************************************************
 
 #==============================================================================
-rmnan
+fourierols(nk::Int,b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
 
-For a given independent variable (x) and dependent variable (y), remove
-all indices where y == NaN
-Compresses the size of original arrays to only include indices without NaN
-Ex: x = [1.,2.,3.,4.], y = [1.,2.,3.,NaN]
-c,d = rmnan(x,y) returns c = [1.,2.,3.], d = [1.,2.,3.]
+Construct a Fourier series via Ordinary Least Squares (OLS) regression.
+- Construct the design matrix A that contains a linear combination of M basis 
+  functions and N data points
+- The basis functions are given by the harmonic series cos(k*ω) + sin(k*ω), 
+  where k is the integer wavenumber and ω is the angular frequency given by
+  ω = 2*pi*i/N, for i = 0:N-1
+
+Input
+nk = largest integer wavenumber to retrieve
+b = data vector
+
+Output
+a = vector containing the amplitudes of the Fourier coefficients for each 
+    wavenumber in k = 0:nk (A_k = cos coefficient; B_k = sin coefficient)
+    k_0 = first index (wavenumber 0)
+    A_k = even-valued indices
+    B_k = odd-valued indices
 ==============================================================================#
 
-# Only remove NaNs from one input vector
+function fourierols(nk::Int,b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
 
-function rmnan(y::AbstractVector{T}) where T<:Real
-
-    # Construct new array absent NaN indices
-    newy = Float64[]
-    for i in eachindex(y)
-        if !isnan(y[i])
-            append!(newy, y[i])
-        end
-    end
-    return newy
-end
-
-# Remove NaNs from both x and y based on their presence in y
-
-function rmnan(x::AbstractVector{Ta},y::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
-
-    length(x) == length(y) ? nothing :
-        throw(DimensionMismatch("Input vectors must have same length"))
-    # Construct new arrays absent NaN indices
-    newx = Float64[]
-    newy = Float64[]
-    for i in eachindex(x)
-        if !isnan(y[i])
-            append!(newx, x[i])
-            append!(newy, y[i])
-        end
-    end
-    return newx, newy
-end
-
-#==============================================================================
-fourierols
-
-Fourier decomposition of azimuth with Ordinary Least Squares (OLS) regression.
-The function begins by constructing the design matrix A that contains a linear
-combination of M basis functions and N data points.
-In Fourier analysis, the basis functions are given by the harmonic series:
-cos(k*phi) + sin(k*phi) where k is the integer wavenumber and phi is the
-azimuth angle from 0 to 2pi.
-The function returns the vector "a" which contains the amplitudes of the
-coefficients.
-** Note: If input wavenumber is nk = 2, the function will return coefficients
-   for wavenumbers 0-2 (i.e., 3 coefficients)
-** Note that if the independent variable in your data is not azimuth but say
-   time, you can still use this function. Just input phi with a normalization
-   factor.
-   Ex: You have a time series (t) that spans (0 <= t <= T), then
-   phi = 2 * pi * t/T
-==============================================================================#
-
-function fourierols(nk::Int,phi::AbstractVector{Ta},b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
-
-    length(phi) == length(b) ? nothing :
-        throw(DimensionMismatch("Input vectors must have same length"))
+    N = length(b)
     # Ensure that no wavenumber higher than the Nyquist is permitted
-    nk <= length(b)/2 ? nothing : error("Wavenumbers exceed the Nyquist frequency")
+    nk <= (N-1)/2 ? nothing : error("Wavenumbers exceed the Nyquist frequency")
     # Construct the design matrix with M basis functions
     M = nk * 2 + 1
-    A = ones(length(phi),M)
+    A = ones(N,M)
     for j in 2:M
-        for i in eachindex(phi)
-            @fastmath @inbounds iseven(j) ? A[i,j] = cos.(j/2*phi[i]) : A[i,j] = sin.((j-1)/2*phi[i])
+        for (ind,i) in enumerate(0:N-1)
+            # Below is equivalent to 2*pi*(j/2)*i/N, where j/2 = wavenumber k 
+            @fastmath @inbounds iseven(j) ? A[ind,j] = cos(j*pi*i/N) : A[ind,j] = sin((j-1)*pi*i/N) 
         end
     end
     # If det(A^T * A) = 0, no unique solution -- throw error
@@ -92,23 +59,34 @@ function fourierols(nk::Int,phi::AbstractVector{Ta},b::AbstractVector{Tb}) where
 end
 
 #==============================================================================
-wavecoeffs
+regress_harmonics(a::AbstractVector{Ta},b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
 
-Given an input set of Fourier coefficients, reconstruct the various wavenubmers
-of a decomposed field
+Given an input set of Fourier coefficients from fourierols, retrieve the 
+regression onto each harmonic 
+
+Input 
+a = vector containing the amplitudes of the Fourier coefficients for each 
+    wavenumber in k = 0:nk (A_k = cos coefficient; B_k = sin coefficient)
+    k_0 = first index (wavenumber 0)
+    A_k = even-valued indices
+    B_k = odd-valued indices
+b = data vector
+
+Output 
+h = regression of b onto each harmonic 
 ==============================================================================#
 
-function wavecoeffs(a::AbstractVector{Ta},phi::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
+function regress_harmonics(a::AbstractVector{Ta},b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
 
-    isodd(length(a)) ? nothing : error("Number of coefficients should be odd
-        (e.g., 3 coefficients required for wavenumbers 0 and 1)")
-    nk = div(length(a) + 1, 2)
-    nkwaves = zeros(nk,length(phi))
-    # Wavenumber-0 is a[1] (mean)
-    nkwaves[1,:] .= a[1]
-    for j in 1:nk-1
-        ind = j + 1
-        @fastmath @inbounds nkwaves[ind,:] = a[j*2] .* cos.(j*phi) + a[j*2+1] .* sin.(j*phi)
+    N = length(b)
+    nk = div(length(a)-1, 2)
+    h = zeros(nk+1,N)
+    # Wavenumber 0 is a[1] 
+    h[1,:] .+= a[1]
+    for k in 1:nk
+        for (ind,i) in enumerate(0:N-1)
+            @fastmath @inbounds h[k+1,ind] = a[k*2] * cos(k*2*pi*i/N) + a[k*2+1] * sin(k*2*pi*i/N) 
+        end
     end
-    return nkwaves
+    return h
 end

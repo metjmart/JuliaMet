@@ -1,13 +1,15 @@
 # *****************************************************************************
 # integrate.jl
+
+# Author:
+#       Jonathan Martinez
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Julia version: 
+#       1.0.0
 #
 # This script contains a set of functions for integrating discretized data
 #
-# Function list:
+# Function list
 # newtoncotes
 # trapz2d
 # trapz3d

@@ -1,13 +1,16 @@
 # *****************************************************************************
 # cyclone.jl
 #
-# Author: Jonathan Martinez
-# Email: jon.martinez@colostate.edu
-# Julia version: 0.6.0
+# Author:
+#       Jonathan Martinez
+#
+# Julia version: 
+#       1.0.0
 #
 # This script contains functions that are more or less specific to tropical
 # cyclone related applications.
 #
+# Function list
 # calc_rmw
 # uv2urvt
 # p3swploc
@@ -69,6 +72,14 @@ function uv2urvt(phi::AbstractVector{Ta},u::AbstractArray{Tb},
         return ur,vt
     end
 end
+
+#==============================================================================
+urvt2uv
+
+Convert radial and tangential winds to u,v winds
+    u = ur * cos(phi) - vt * sin(phi)
+    v = ur * sin(phi) + vt * cos(phi)
+==============================================================================#
 
 #==============================================================================
 p3swploc
