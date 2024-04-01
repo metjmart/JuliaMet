@@ -85,7 +85,7 @@ stretching).
 ==============================================================================#
 
 function xy2rp(cx::Real,cy::Real,x::AbstractVector{Ta},
-               y::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real,Tc<:Real}
+               y::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
 
     # Pinpoint the center of grid that has no stretching
     # Has no impact on grids with constant spacing

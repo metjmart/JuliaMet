@@ -37,7 +37,7 @@ a = vector containing the amplitudes of the Fourier coefficients for each
     B_k = odd-valued indices
 ==============================================================================#
 
-function fourierols(nk::Int,b::AbstractVector{Tb}) where {Ta<:Real,Tb<:Real}
+function fourierols(nk::Int,b::AbstractVector{Ta}) where {Ta<:Real}
 
     N = length(b)
     # Ensure that no wavenumber higher than the Nyquist is permitted
