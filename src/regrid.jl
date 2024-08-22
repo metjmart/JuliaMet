@@ -335,17 +335,12 @@ This function will take u, v, or w (vectors) on a 3-D grid and unstagger them,
 placing them on the same grid as scalar variables
 ==============================================================================#
 
-function unstagger(grid::AbstractArray{<:Real},method::Symbol=:u)
-    if method == :u
-        gridout = 0.5 * (grid[1:end-1,:,:] + grid[2:end,:,:])
-        return gridout
-    elseif method == :v
-        gridout = 0.5 * (grid[:,1:end-1,:] + grid[:,2:end,:])
-        return gridout
-    elseif method == :w
-        gridout = 0.5 * (grid[:,:,1:end-1] + grid[:,:,2:end])
-        return gridout
-    end
+function _unstagger(grid::AbstractVector{<:Real})
+    return 0.5 * (grid[1:end-1] + grid[2:end])
+end
+
+function unstagger(grid::AbstractArray{<:Real};dims::Int)
+    return mapslices(_unstagger,grid,dims=dims) 
 end
 
 #==============================================================================
