@@ -20,7 +20,7 @@ module JuliaMet
            nanargmax, nanfindmin, nanargmin
     export read_ncvars
     export closest_ind, grid2d, grid3d, xy2rp, regrid_xy2rp, regrid_xyz2rpz,
-           regrid_pol2cart, unstagger, curv2rect, curv2rect_wgts
+           regrid_pol2cart, unstagger, interplevel, curv2rect, curv2rect_wgts
     export obslocs_rtz
     export get_bolton_thetae, get_sat_vap_prs, rslf, rsif
     export rankine, smrankine, modrankine, hermite, re87, cw87, wc04

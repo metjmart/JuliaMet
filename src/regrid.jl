@@ -343,6 +343,48 @@ function unstagger(grid::AbstractArray{<:Real};dims::Int)
     return mapslices(_unstagger,grid,dims=dims) 
 end
 
+"""
+    interplevel(
+        field::AbstractArray{<:Real,3},
+        ilev::AbstractArray{<:Real,3},
+        olev::AbstractVector{<:Real})
+
+For each vertical column, generate an interpolation object and interpolate
+input levels (ilev) to output levels (olev)
+- Extrapolation condition set to NaN
+
+[Similar to wrf-python interplevel](https://wrf-python.readthedocs.io/en/latest/user_api/generated/wrf.interplevel.html#wrf.interplevel)
+
+# Arguments
+- field: Input field to interpolate with size (nx, ny, nz)
+- ilev: Input vertical level with size (nx,ny,nz)--could be pressure or height
+- olev: Desired output vertical level (same units as ilev)
+Output
+- field_itp: field interpolated column-wise to levels specified in olev
+"""
+function interplevel(
+    field::AbstractArray{Ta,3},
+    ilev::AbstractArray{Tb,3},
+    olev::AbstractVector{Tc}) where {Ta<:Real,Tb<:Real,Tc<:Real}
+
+    nx,ny,nzi = size(field)
+    nzo = length(olev)
+    field_interp = zeros(nx,ny,nzo)
+    fill!(field_interp,NaN)
+    for j in 1:ny
+        for i in 1:nx
+            nodes = ilev[i,j,:]
+            # Sort indices in ascending order
+            (nodes[nzi] < nodes[1]) ? si = sortperm(nodes) : si = 1:nzi
+            field_itp = extrapolate(interpolate((nodes[si],),field[i,j,si],Gridded(Linear())),NaN)
+            for k in 1:nzo
+                field_interp[i,j,k] = field_itp(olev[k])
+            end
+        end
+    end
+    return field_interp
+end
+
 #==============================================================================
 curv2rect
 
