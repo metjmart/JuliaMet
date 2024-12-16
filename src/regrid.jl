@@ -344,23 +344,22 @@ function unstagger(grid::AbstractArray{<:Real};dims::Int)
 end
 
 """
-    interplevel(
-        field::AbstractArray{<:Real,3},
-        ilev::AbstractArray{<:Real,3},
-        olev::AbstractVector{<:Real})
+    interplevel(field, ilev, olev) -> AbstractArray{<:Real,3}
 
-For each vertical column, generate an interpolation object and interpolate
-input levels (ilev) to output levels (olev)
-- Extrapolation condition set to NaN
+Interpolate vertical columns on a 3-D WRF grid to specified output levels.
+
+For each vertical column on a WRF grid, generate an interpolation object and 
+interpolate input levels (`ilev`) to output levels (`olev`). The extrapolation 
+condition set to NaN.
 
 [Similar to wrf-python interplevel](https://wrf-python.readthedocs.io/en/latest/user_api/generated/wrf.interplevel.html#wrf.interplevel)
 
 # Arguments
-- field: Input field to interpolate with size (nx, ny, nz)
-- ilev: Input vertical level with size (nx,ny,nz)--could be pressure or height
-- olev: Desired output vertical level (same units as ilev)
-Output
-- field_itp: field interpolated column-wise to levels specified in olev
+- `field::AbstractArray{<:Real,3}`: Input field to interpolate with size (nx,ny,nz)
+- `ilev::AbstractArray{<:Real,3}`: Input vertical level with size (nx,ny,nz)--could be pressure or height
+- `olev::AbstractVector{<:Real}`: Desired output vertical level (same units as ilev)
+# Output
+- `field_itp::AbstractArray{<:Real,3}`: field interpolated column-wise to levels specified in olev
 """
 function interplevel(
     field::AbstractArray{Ta,3},
