@@ -9,6 +9,7 @@ module JuliaMet
 
     export searchdir
     export filtloop, psi_centroid_xy, p_centroid, p_centroid_
+    export WRFConstants, wrfcs
     export calc_rmw, uv2urvt, p3swploc
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_dt, finite_laplacian, kron_delta,
            fd_weights, finite_ds, finite_dsx, finite_dsy, finite_dsz, diff1, spdiff1, Laplacian
@@ -24,8 +25,10 @@ module JuliaMet
     export obslocs_rtz
     export get_bolton_thetae, get_sat_vap_prs, rslf, rsif
     export rankine, smrankine, modrankine, hermite, re87, cw87, wc04
+    export WRFCoordVars
 
     include("center_finding.jl")
+    include("constants.jl")
     include("cyclone.jl")
     include("derivative.jl")
     include("derivative4.jl")
@@ -38,5 +41,6 @@ module JuliaMet
     include("samurai_obslocs.jl")
     include("thermo.jl")
     include("vortexprofs.jl")
+    include("wrfcoordvars.jl")
 
 end # module
