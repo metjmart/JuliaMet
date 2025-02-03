@@ -1,5 +1,5 @@
 #*******************************************************************************
-# simplex_aux.jl
+# simplex.jl
 #
 # Author:
 #     Jonathan Martinez
@@ -326,7 +326,6 @@ function objsimplex(
         # Remove the outliers for each radius and return the prelim center
         pxc,pyc,pstd = get_prelim_center(sxcen,sycen)
         # Compute the azimuthal mean tangential wind for the prelim center
-        # If mean_vt could be NaN, add a joint conditional or outer conditional statement
         mean_vt = meanvtr(pxc,pyc,radii[ir],coord.x,coord.y,u,v)
         if mean_vt > max_mean_vt 
             sxc = pxc

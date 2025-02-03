@@ -2,7 +2,7 @@ __precompile__()
 
 module JuliaMet
 
-    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, Statistics, DelimitedFiles, DSP
+    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, Statistics, DelimitedFiles, DSP, Optim
 
     # Define a function to search a given path for all files containing the given key
     searchdir(path,key) = filter(x->occursin(key,x), readdir(path))
@@ -23,6 +23,7 @@ module JuliaMet
     export closest_ind, grid2d, grid3d, xy2rp, regrid_xy2rp, regrid_xyz2rpz,
            regrid_pol2cart, unstagger, interplevel, curv2rect, curv2rect_wgts
     export obslocs_rtz
+    export objsimplex, nanobjsimplex
     export get_bolton_thetae, get_sat_vap_prs, rslf, rsif
     export rankine, smrankine, modrankine, hermite, re87, cw87, wc04
     export WRFCoordVars
@@ -39,6 +40,7 @@ module JuliaMet
     include("nc_tools.jl")
     include("regrid.jl")
     include("samurai_obslocs.jl")
+    include("simplex.jl")
     include("thermo.jl")
     include("vortexprofs.jl")
     include("wrfcoordvars.jl")
