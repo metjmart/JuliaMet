@@ -2,10 +2,7 @@
 # nc_tools.jl
 #
 # Author:
-#       Jonathan Martinez
-#
-# Julia version: 
-#       1.0.0
+#     Jonathan Martinez
 #
 # Functions for NetCDF I/O in Julia
 #
@@ -13,22 +10,21 @@
 # read_ncvars
 # *****************************************************************************
 
-#==============================================================================
-read_ncvars
+"""
+    read_ncvars(ncfile, varnames; mask_opt, dict_opt)
 
 Read in variables from a NetCDF file and squeeze singleton dimensions
 
-ncfile = string pointing to NetCDF file location/name
-varnames = array of strings with variable names (1-element array for 1 variable)
+# Arguments
+- `ncfile::AbstractString`: filepath to NetCDF file
+- `varnames::AbstractArray`: array of strings with variable names (1-element array for 1 variable)
+- `mask_opt::Bool`: Option to replace fill/miss values with NaN if fill/miss values exist
+                    (opt for _FillValue first, then missing_value)
+- `dict_opt::Bool`: Option to return variable(s) in an ordered dictionary
 
-Keyword arguments
-
-mask_opt = if true--replace fill/miss values with NaN if fill/miss values
-           exist for the variable (opt for fillval first, then missval)
-
-dict_opt = if true--return variable(s) in an ordered dictionary
-==============================================================================#
-
+# Returns
+- `vardata::Union{OrderedDict,Array}`: ordered dictionary or array of variable(s)
+"""
 function read_ncvars(ncfile::AbstractString,varnames::AbstractArray;
                      mask_opt::Bool,dict_opt::Bool)
 

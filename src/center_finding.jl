@@ -17,21 +17,19 @@
 # p_centroid_
 # *****************************************************************************
 
-#==============================================================================
-# filtloop
+"""
+    filtloop(field, n; g=[0.25,0.5,0.25]) -> field
 
-Smooth a given field n times with a 1-2-1 filter (by default)
+Filter the input array `field` `n` times with a 1-2-1 filter
 
-filtloop(field::AbstractVector{T},n::Int;g=[0.25,0.5,0.25]) where T<:Real
+# Arguments
+- `field::AbstractVector{T}`: Input vector to be filtered
+- `n`: Number of times to apply the filter
+- `g=[0.25,0.5,0.25]`: Filter weights (default is a 1-2-1 filter)
 
-Input
-field - One-dimensional field along the axis to be smoothed 
-n - Number of times the filter is applied
-g - Filter weights - default is a 1-2-1 filter, but can be modified
-Output
-field - Smoothed field 
-==============================================================================#
-
+# Returns
+- Filtered vector
+"""
 function filtloop(field::AbstractVector{T},n::Int;g=[0.25,0.5,0.25]) where T<:Real
     for i in 1:n
         field = filtfilt(g,field)
