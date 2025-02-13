@@ -15,7 +15,8 @@
 """
     WRFCoordVars
 
-Store unstaggered coordinate arrays and their respective dimensions from WRF simulations.\\
+Store unstaggered coordinate arrays and their respective dimensions from WRF simulations
+
 This struct is specifically designed to work with WRF idealized TC simulations.\\
 Note that the vertical grid is excluded, but its unstaggered size is included.
 
@@ -30,8 +31,8 @@ Note that the vertical grid is excluded, but its unstaggered size is included.
 
 # Construction 
 
-The struct is created by providing a string that points to the path/to/file
-for the WRF NetCDF file from which to extract variables:
+The struct is created by providing a string that points to the WRF NetCDF 
+filepath from which to extract variables:
 
     WRFCoordVars(filepath::String)
 
@@ -90,4 +91,57 @@ function _WRFCoordVars(filepath::String)
     xm = unstagger(_xm,dims=1)
     ym = unstagger(_ym,dims=1)
     return dxm,dym,xm,ym,dxm/1e3,dym/1e3,xm./1e3,ym./1e3,nx-1,ny-1,nz-1
+end
+
+"""
+    get_wrf_files(filepath, domain)
+
+Get the paths to WRF output files given a filepath and domain
+
+# Arguments
+- `filepath::String`: Path to WRF output files
+- `domain::Int`: WRF domain (e.g., 1,2,3)
+
+# Returns
+- `fins::Vector{String}`: Vector of strings with the paths to WRF output files
+"""
+function get_wrf_files(filepath::String, domain::Int)
+    # Convert domain to search for regex matching WRF output files
+    pattern = "^wrfout_d$(@sprintf("%02d",domain)).*"
+    pattern = Regex(pattern)
+    fins = joinpath.(filepath, [fin for fin in readdir(filepath) if !isnothing(match(pattern,fin))])
+    return fins
+end
+
+"""
+    get_wrf_files()
+
+Parse command line arguments to get the paths to WRF output files 
+
+# Returns
+- `fins`: Array of strings with the paths to WRF output files
+"""
+function get_wrf_files()
+    function parseargs()
+        s = ArgParseSettings()
+        @add_arg_table s begin
+            "--filepath"
+                help = "Path to WRF output files"
+                required = true
+                arg_type = String
+            "--domain"
+                help = "WRF domain (e.g., 1,2,3)"
+                required = true
+                arg_type = Int
+        end
+        return parse_args(s)
+    end
+    args = parseargs()
+    filepath = args["filepath"]
+    domain = args["domain"]
+    # Convert domain to search for regex matching WRF output files
+    pattern = "^wrfout_d$(@sprintf("%02d",domain)).*"
+    pattern = Regex(pattern)
+    fins = joinpath.(filepath, [fin for fin in readdir(filepath) if !isnothing(match(pattern,fin))])
+    return fins
 end

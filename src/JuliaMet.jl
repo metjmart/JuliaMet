@@ -2,7 +2,7 @@ __precompile__()
 
 module JuliaMet
 
-    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, Statistics, DelimitedFiles, DSP, Optim
+    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, Statistics, DelimitedFiles, DSP, Optim, ArgParse, Printf
 
     # Define a function to search a given path for all files containing the given key
     searchdir(path,key) = filter(x->occursin(key,x), readdir(path))
@@ -26,7 +26,7 @@ module JuliaMet
     export objsimplex, nanobjsimplex
     export get_bolton_thetae, get_sat_vap_prs, rslf, rsif
     export rankine, smrankine, modrankine, hermite, re87, cw87, wc04
-    export WRFCoordVars
+    export WRFCoordVars, get_wrf_files
 
     include("center_finding.jl")
     include("constants.jl")
