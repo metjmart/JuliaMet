@@ -10,7 +10,7 @@ module JuliaMet
     export searchdir
     export filtloop, psi_centroid_xy, p_centroid, p_centroid_
     export WRFConstants, wrfcs
-    export calc_rmw, uv2urvt, p3swploc
+    export calc_rmw, uv2urvt, p3swploc, rapid_init, lanczos_filter
     export finite_dr, finite_dx, finite_dy, finite_dz, finite_dt, finite_laplacian, kron_delta,
            fd_weights, finite_ds, finite_dsx, finite_dsy, finite_dsz, diff1, spdiff1, Laplacian
     export fd_weights4, finite_ds4, finite_dsx4, finite_dsy4, finite_dsz4

@@ -190,3 +190,73 @@ function p3swploc(fl_time::AbstractVector{Ta},fl_lat::AbstractVector{Tb},
            aftR_lon,aftR_lat,aftL_lon,aftL_lat
 
 end
+
+"""
+    rapid_init(psi; thresh=15.43, tau=24, subtau=6, fs=1)
+
+Determine the index where rapid change initiates
+
+For a time series (e.g., winds or pressure), find the index where rapid change 
+(e.g., intensification or weakening) begins. Rapid change is defined by the
+threshold `thresh` over the given time period `tau`. Rapid change must persist
+over `tau` for each subset of time `subtau`. The sampling frequency `fs`
+can be modified given the resolution of the input time series
+
+# Note 
+- The units of rapid change are given by the input time series and arguments
+- If persistence is not required, set `subtau` = `tau`
+
+# Arguments
+- `psi::AbstractVector{<:Real}`: time series (e.g., wind or pressure)
+- `thresh::Int`: threshold for rapid change
+- `tau::Int`: time window for rapid change
+- `subtau::Int`: subset of time window for rapid change to persist
+- `fs::Int`: sampling frequency
+# Output 
+- `ind::Int`: index where the rapid change begins (0 if none)
+
+# Example
+The default configuration assumes:
+- `psi` = units of m/s
+- `thresh` = 15.43 m/s
+- `tau` = 24 hours
+- `subtau` = 6 hours
+- `fs` = 1-hour time steps
+This configuration requires:
+- Rapid intensification of 15.43 m/s in 24 h
+    - Rapid intensification of 15.43 / (`tau` / `subtau`) = 3.8575 m/s in each 6-h window
+"""
+function rapid_init(vmax::AbstractVector{Ta}; thresh=15.43, tau::Int=24, subtau::Int=6, fs::Int=1) where {Ta<:Real}
+    m = length(vmax)
+    n = fs * tau
+    nsub = fs * subtau
+    thresh_sub = thresh / (tau / subtau)
+    ind = 0
+    for i in 1:m-n-1
+        dvdt = vmax[i+n] - vmax[i]
+        dvdt_sub = vmax[i+nsub] - vmax[i]
+        if (dvdt >= thresh) && (dvdt_sub >= thresh_sub)
+            ind = i
+            break
+        end
+    end
+    return ind
+end
+
+"""
+Apply a low-pass Lanczos filter to a time series
+
+# Arguments
+- `x::AbstractVector{<:Real}`: input time series
+- `n::Int`: number of filter weights (size of window)
+- `Wn::Int`: cutoff frequency for the low-pass filter
+- `fs::Int`: sampling frequency of data 
+
+# Returns
+- filtered time series with no phase distortion
+"""
+function lanczos_filter(x::AbstractVector{Ta}, n::Int, Wn::Int; fs::Int=1) where {Ta<:Real}
+    rtype = Lowpass(fs/Wn)
+    dmeth = FIRWindow(lanczos(n))
+    return filtfilt(digitalfilter(rtype, dmeth, fs=fs), x)
+end
