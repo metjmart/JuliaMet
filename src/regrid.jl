@@ -172,6 +172,10 @@ function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{Ta},
                         y::AbstractVector{Tb},z::AbstractVector{Tc},
                         field::AbstractArray{Td,3}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real}
 
+    nx,ny,nz = size(field)
+    if nx != length(x) || ny != length(y) || nz != length(z)
+        error("Dimension mismatch: field dimensions must match lengths of x, y, z. size(field) = $(size(field)), (length(x), length(y), length(z)) = ($(length(x)), $(length(y)), $(length(z)))")
+    end
     # Define r and phi
     r,phi = xy2rp(cx,cy,x,y)
     # Define the dimensions of the new var
@@ -180,7 +184,6 @@ function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{Ta},
     for k in eachindex(z)
         @inbounds field_rpz[:,:,k] = regrid_xy2rp(cx,cy,x,y,field[:,:,k])
     end
-    # Return field_rpz
     return field_rpz
 end
 
@@ -191,6 +194,10 @@ function regrid_xyz2rpz(cx::Real,cy::Real,x::AbstractVector{Ta},
                         r::AbstractVector{Td},phi::AbstractVector{Te},
                         field::AbstractArray{Tf,3}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}
 
+    nx,ny,nz = size(field)
+    if nx != length(x) || ny != length(y) || nz != length(z)
+        error("Dimension mismatch: field dimensions must match lengths of x, y, z. size(field) = $(size(field)), (length(x), length(y), length(z)) = ($(length(x)), $(length(y)), $(length(z)))")
+    end
     # Define the dimensions of the new var
     field_rpz = Array{Float64}(undef,length(r),length(phi),length(z))
     # Call regrid_xy2rp at each vertical level
@@ -207,6 +214,10 @@ function regrid_xyz2rpz(x::AbstractVector{Ta},y::AbstractVector{Tb},z::AbstractV
                         r::AbstractVector{Td},phi::AbstractVector{Te},
                         field::AbstractArray{Tf,3}) where {Ta<:Real,Tb<:Real,Tc<:Real,Td<:Real,Te<:Real,Tf<:Real}
 
+    nx,ny,nz = size(field)
+    if nx != length(x) || ny != length(y) || nz != length(z)
+        error("Dimension mismatch: field dimensions must match lengths of x, y, z. size(field) = $(size(field)), (length(x), length(y), length(z)) = ($(length(x)), $(length(y)), $(length(z)))")
+    end
     # Define the dimensions of the new var
     field_rpz = Array{Float64}(undef,length(r),length(phi),length(z))
     # Call regrid_xy2rp at each vertical level
