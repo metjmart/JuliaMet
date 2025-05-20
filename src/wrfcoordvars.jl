@@ -13,7 +13,7 @@
 # *****************************************************************************
 
 """
-    WRFCoordVars
+    WRFCoordVars(filepath::String)
 
 Store unstaggered coordinate arrays and their respective dimensions from WRF simulations
 
@@ -25,6 +25,10 @@ Note that the vertical grid is excluded, but its unstaggered size is included.
 - `dym`: y-coordinate grid spacing (meters)
 - `xm`: x-coordinate (meters)
 - `ym`: y-coordinate (meters)
+- `dx`: x-coordinate grid spacing (km)
+- `dy`: y-coordinate grid spacing (km)
+- `x`: x-coordinate (km)
+- `y`: y-coordinate (km)
 - `nx`: number of unstaggered x-coordinate grid cells 
 - `ny`: number of unstaggered y-coordinate grid cells 
 - `nz`: number of unstaggered z-coordinate grid cells 
@@ -57,25 +61,30 @@ struct WRFCoordVars
     nz::Int64
 end
 
-# Outer constructor for the WRFCoordVars struct
+"""
+    WRFCoordVars(filepath::String)
 
+Outer constructor for the WRFCoordVars struct
+
+# Arguments
+- `filepath::String`: path to WRF output file 
+"""
 function WRFCoordVars(filepath::String)
-    dxm,dym,xm,ym,dx,dy,x,y,nx,ny,nz = _WRFCoordVars(filepath)
-    WRFCoordVars(dxm,dym,xm,ym,dx,dy,x,y,nx,ny,nz)
+    WRFCoordVars(_WRFCoordVars(filepath)...)
 end
 
-# Extract the unstaggered coordinate arrays and their respective dimensions
-# for the WRFCoordVars struct 
-
+"""
+Extract unstaggered coordinate arrays and respective dimensions for WRFCoordVars
+"""
 function _WRFCoordVars(filepath::String)
-    # Get dx, dy from metadata
+    # get dx, dy from metadata
     dxm = ncgetatt(filepath, "Global", "DX")
     dym = ncgetatt(filepath, "Global", "DY")
-    # Get number of unstaggered u,v,w grid points from metadata
+    # get number of unstaggered u,v,w grid points from metadata
     nx = ncgetatt(filepath, "Global", "WEST-EAST_GRID_DIMENSION")
     ny = ncgetatt(filepath, "Global", "SOUTH-NORTH_GRID_DIMENSION")
     nz = ncgetatt(filepath, "Global", "BOTTOM-TOP_GRID_DIMENSION")
-    # Define x,y arrays 
+    # define x,y arrays 
     _xm = zeros(nx)
     _ym = zeros(ny)
     for i in 1:nx
@@ -84,30 +93,122 @@ function _WRFCoordVars(filepath::String)
     for j in 1:ny
         _ym[j] = (j-1) * dym
     end
-    # Center on (_nx-1,_ny-1)
+    # center
     _xm .-= _xm[div(nx,2)+1]
     _ym .-= _ym[div(ny,2)+1]
-    # Unstagger 
+    # unstagger 
     xm = unstagger(_xm,dims=1)
     ym = unstagger(_ym,dims=1)
     return dxm,dym,xm,ym,dxm/1e3,dym/1e3,xm./1e3,ym./1e3,nx-1,ny-1,nz-1
 end
 
 """
-    get_wrf_files(filepath, domain)
+    WRFPostProcCoordVars(filepath::String)
 
-Get the paths to WRF output files given a filepath and domain
+Store post-processed coordinate arrays and their respective dimensions from WRF simulations
+
+This struct is designed to work with post-processed WRF idealized TC simulations.  
+Post-processed variables have been unstaggered and interpolated to altitude (vertical) coordinates.
+
+# Fields
+- `dxm`: x-coordinate grid spacing (meters)
+- `dym`: y-coordinate grid spacing (meters)
+- `dzm`: z-coordinate grid spacing (meters)
+- `xm`: x-coordinate (meters)
+- `ym`: y-coordinate (meters)
+- `zm`: z-coordinate (meters)
+- `dx`: x-coordinate grid spacing (km)
+- `dy`: y-coordinate grid spacing (km)
+- `dz`: z-coordinate grid spacing (km)
+- `x`: x-coordinate (km)
+- `y`: y-coordinate (km)
+- `z`: z-coordinate (km)
+- `nx`: number of unstaggered x-coordinate grid cells
+- `ny`: number of unstaggered y-coordinate grid cells
+- `nz`: number of unstaggered z-coordinate grid cells
+
+# Construction 
+
+The struct is created by providing a string that points to the post-processed  
+WRF NetCDF filepath from which to extract variables:
+
+    WRFPostProcCoordVars(filepath::String)
+
+# Example
+
+```julia
+filepath = "path/to/wrfout_dxx_yyyy-mm-dd-hh:mm"
+coordvars = WRFPostProcCoordVars(filepath)
+```
+"""
+struct WRFPostProcCoordVars
+    dxm::Float64
+    dym::Float64
+    dzm::Float64
+    xm::Vector{Float64}
+    ym::Vector{Float64}
+    zm::Vector{Float64}
+    dx::Float64
+    dy::Float64
+    dz::Float64
+    x::Vector{Float64}
+    y::Vector{Float64}
+    z::Vector{Float64}
+    nx::Int64
+    ny::Int64
+    nz::Int64
+end
+
+"""
+    WRFPostProcCoordVars(filepath::String)
+
+Outer constructor for the WRFPostProcCoordVars struct
+
+# Arguments
+- `filepath::String`: path to post-processed WRF output file 
+"""
+function WRFPostProcCoordVars(filepath::String)
+    WRFPostProcCoordVars(_WRFPostProcCoordVars(filepath)...)
+end
+
+"""
+Extract unstaggered coordinate arrays and respective dimensions for WRFPostProcCoordVars
+"""
+function _WRFPostProcCoordVars(filepath::String)
+    # get nx, ny, nz
+    ds = NCDataset(filepath)
+    nx, ny, nz = [ds.dim[key] for key in keys(ds.dim)]
+    x = ds["x"][:]
+    y = ds["y"][:]
+    z = ds["z"][:]
+    xm = x * 1e3
+    ym = y * 1e3
+    zm = z * 1e3
+    dx = x[2]-x[1]
+    dy = y[2]-y[1]
+    dz = z[2]-z[1]
+    dxm = dx * 1e3
+    dym = dy * 1e3
+    dzm = dz * 1e3
+    return dxm,dym,dzm,xm,ym,zm,dx,dy,dz,x,y,z,nx,ny,nz
+end
+
+"""
+    get_wrf_files(filepath, domain; prefix)
+
+Get the paths to WRF output files
 
 # Arguments
 - `filepath::String`: Path to WRF output files
 - `domain::Int`: WRF domain (e.g., 1,2,3)
-
+- `prefix::String`: prefix to WRF output file pattern  
+    - Use for files other than raw WRF output but still contain the "wrfout_d0x" naming convention)
 # Returns
 - `fins::Vector{String}`: Vector of strings with the paths to WRF output files
 """
-function get_wrf_files(filepath::String, domain::Int)
+function get_wrf_files(filepath::String, domain::Int; prefix::String="^")
     # Convert domain to search for regex matching WRF output files
-    pattern = "^wrfout_d$(@sprintf("%02d",domain)).*"
+    pattern = "$(prefix)wrfout_d$(@sprintf("%02d",domain)).*"
     pattern = Regex(pattern)
     fins = joinpath.(filepath, [fin for fin in readdir(filepath) if !isnothing(match(pattern,fin))])
     return fins
@@ -144,4 +245,30 @@ function get_wrf_files()
     pattern = Regex(pattern)
     fins = joinpath.(filepath, [fin for fin in readdir(filepath) if !isnothing(match(pattern,fin))])
     return fins
+end
+
+"""
+    match_wrf_files(wrfoutfiles, xfiles)
+
+Verify that the date/time of a list of WRF files match a corresponding list of files
+
+For each WRF file in a list, get the date/time regex and match it to the
+corresponding index of a second input list of strings. If the date/time regex
+does not match, return an error
+
+# Arguments
+- `wrfout_files::AbstractVector{<:String}`: Vector of strings with WRF file names
+- `xfiles::AbstractVector{<:String}`: Vector of strings to match to WRF files
+# Output
+- nothing (raise an error if a mismatch occurs)
+"""
+function match_wrf_files(wfiles::Vector{String}, xfiles::Vector{String})
+    # YYYY-MM-DD_HH:MM:SS
+    pattern = r"\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}"
+    for (i,wfile) in enumerate(wfiles)
+        datetime_pattern = match(pattern, wfile)
+        if !occursin(datetime_pattern.match, xfiles[i])
+            error("datetime $(datetime_pattern.match) does not match file $(xfiles[i])")
+        end
+    end
 end
