@@ -8,15 +8,14 @@
 #       1.10.4
 #
 # This script contains data types to store constants for different applications
-#
 # *****************************************************************************
 
 """
-    WRFConstants
+  WRFConstants
 
 Store constants from WRF model environment.
 
-Constants are defined following WRF definitions under shared/module_constants.F.\\
+Constants are defined following WRF definitions under shared/module_constants.F.  
 An instance `wrfcs` is generated to precompile the WRF constants.
 
 # Defined fields
@@ -27,7 +26,6 @@ An instance `wrfcs` is generated to precompile the WRF constants.
 - `t_00`: Reference potential temperature (K)
 
 # Derived fields
-
 - `c_pa`: Specific heat capacity for dry air at constant pressure (J K^-1 kg^-1)
 - `epsilon`: r_a/r_v
 - `kappa`: r_a/c_pa
@@ -49,12 +47,12 @@ struct WRFConstants{T}
         kappa = r_a / c_pa
         new{T}(r_a, r_v, g, p_00, t_00, c_pa, epsilon, kappa)
     end
-  end
+end
   
-  wrfcs = WRFConstants(
+wrfcs = WRFConstants(
     287.,
     461.6,
     9.81,
     100000.0,
     300.
-  )
+)
