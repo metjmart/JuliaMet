@@ -227,15 +227,21 @@ This configuration requires:
     - Rapid intensification of 15.43 / (`tau` / `subtau`) = 3.8575 m/s in each 6-h window
 """
 function rapid_init(vmax::AbstractVector{Ta}; thresh=15.43, tau::Int=24, subtau::Int=6, fs::Int=1) where {Ta<:Real}
+    if tau % subtau != 0.0
+        error("subtau=$(subtau) is not a factor of tau=$(tau)")
     m = length(vmax)
     n = fs * tau
     nsub = fs * subtau
+    nsubints = div(tau, subtau)
     thresh_sub = thresh / (tau / subtau)
     ind = 0
-    for i in 1:m-n-1
+    for i in 1:m-n
         dvdt = vmax[i+n] - vmax[i]
-        dvdt_sub = vmax[i+nsub] - vmax[i]
-        if (dvdt >= thresh) && (dvdt_sub >= thresh_sub)
+        dvdt_subs = []
+        for j in 1:nsubints
+            push!(dvdt_subs, vmax[i + j*nsub] - vmax[i + (j-1)*nsub])
+        end
+        if (dvdt >= thresh) && (all(dvdt_subs .>= thresh_sub))
             ind = i
             break
         end
