@@ -210,8 +210,8 @@ can be modified given the resolution of the input time series
 - `psi::AbstractVector{<:Real}`: time series (e.g., wind or pressure)
 - `thresh::Int`: threshold for rapid change
 - `tau::Int`: time window for rapid change
-- `subtau::Int`: subset of time window for rapid change to persist
-- `fs::Int`: sampling frequency
+- `subtau::Int`: subset of time window for rapid change to persist (must be a factor of tau)
+- `fs::Int`: sampling frequency (relative to tau & subtau)
 # Output 
 - `ind::Int`: index where the rapid change begins (0 if none)
 
@@ -221,7 +221,7 @@ The default configuration assumes:
 - `thresh` = 15.43 m/s
 - `tau` = 24 hours
 - `subtau` = 6 hours
-- `fs` = 1-hour time steps
+- `fs` = 1-hour time steps (if time steps were 10 mins, fs would be 6)
 This configuration requires:
 - Rapid intensification of 15.43 m/s in 24 h
     - Rapid intensification of 15.43 / (`tau` / `subtau`) = 3.8575 m/s in each 6-h window
