@@ -229,6 +229,7 @@ This configuration requires:
 function rapid_init(vmax::AbstractVector{Ta}; thresh=15.43, tau::Int=24, subtau::Int=6, fs::Int=1) where {Ta<:Real}
     if tau % subtau != 0.0
         error("subtau=$(subtau) is not a factor of tau=$(tau)")
+    end
     m = length(vmax)
     n = fs * tau
     nsub = fs * subtau
