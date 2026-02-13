@@ -248,6 +248,38 @@ function get_wrf_files()
 end
 
 """
+    get_wrf_simulation(cfgpath::String)
+
+Parse command line arguments to configure analyses for a WRF simulation
+
+# Returns
+- `sim`: Name of simulation parsed from CLI
+- `dom`: Domain parsed from CLI
+"""
+function get_wrf_simulation(cfgpath::String)
+    # get parent path from cfg
+    parpath = TOML.parsefile(cfgpath)["config"]["parpath"]
+    function parseargs()
+        s = ArgParseSettings()
+        @add_arg_table s begin
+            "--simulation"
+                help = "WRF simulation directory name"
+                required = true
+                arg_type = String
+            "--domain"
+                help = "WRF domain (e.g., 1,2,3)"
+                required = true
+                arg_type = Int
+        end
+        return parse_args(s)
+    end
+    args = parseargs()
+    sim = args["simulation"]
+    dom = args["domain"]
+    return parpath, sim, dom
+end
+
+"""
     match_wrf_files(wrfoutfiles, xfiles)
 
 Verify that the date/time of a list of WRF files match a corresponding list of files
@@ -271,4 +303,98 @@ function match_wrf_files(wfiles::Vector{String}, xfiles::Vector{String})
             error("datetime $(datetime_pattern.match) does not match file $(xfiles[i])")
         end
     end
+end
+
+"""
+    get_wrf_time_specs()
+
+Parse command line arguments to get user-defined time specifications from a WRF simulation
+
+# Returns
+- `ts::Int`: start time index
+- `te::Int`: end time index
+- `ri::String`
+    - input: flag to read/use rapid intensification index from a `rapid_init.toml` file as `te`
+    - output: if `ri == true`: string with prefix for figure names "ri_"; if `ri == false`: empty string ""
+- `ri_path::String`: path to `rapid_init.toml` file containing index `ri_ind`
+"""
+function get_wrf_time_specs()
+    function parseargs()
+        s = ArgParseSettings()
+        @add_arg_table s begin
+            "--ts"
+                help = "Start time index"
+                arg_type = Int
+            "--te"
+                help = "End time index"
+                arg_type = Int
+            "--ri"
+                help = "Read rapid_init.toml ri_ind to ts"
+                arg_type = String
+            "--ri_path"
+                help = "Path to rapid_init.toml file (default is directory where parent script is run)"
+                arg_type = String
+                default = ""
+        end
+        return parse_args(s)
+    end
+    args = parseargs()
+    ts = args["ts"]
+    te = args["te"]
+    ri = lowercase(args["ri"])
+    ri_path = args["ri_path"]
+    if ri == "true"
+        config = TOML.parsefile(joinpath(ri_path, "rapid_init.toml"))
+        ri_ind = config["ri_ind"]
+        ts = ri_ind
+        desc = "ri"
+    else
+        desc = ""
+    end
+    if ts > te
+        error("start time index ts cannot be larger than end time index te")
+    end
+    return ts, te, desc
+end
+
+"""
+    WRFTimeSpecs
+
+Store user-defined time specifications from a WRF simulation
+
+This struct currently operates on indexes, not time units (e.g., hours or mins)
+
+# Fields
+- `ts::Int`: start time index
+- `te::Int`: end time index
+- `desc::String`: string with prefix for figure names
+
+# Construction 
+
+Call the outer-constructor with no args to parse command-line args  
+
+```julia
+    WRFTimeSpecs()
+````
+
+Or, pass args directly (note: this gives the option to define `desc` differently)
+
+```julia
+    WRFTimeSpecs(1, 168, "ri")
+```
+
+"""
+struct WRFTimeSpecs
+    ts::Int
+    te::Int
+    desc::String
+end
+
+"""
+    WRFTimeSpecs
+
+Outer constructor to generate the WRFTimeSpecs struct via command-line args from `get_wrf_time_specs()`
+"""
+function WRFTimeSpecs()
+    WRFTimeSpecs(get_wrf_time_specs()...)
 end

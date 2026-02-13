@@ -2,7 +2,7 @@ __precompile__()
 
 module JuliaMet
 
-    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, NCDatasets, Statistics, DelimitedFiles, DSP, Optim, ArgParse, Printf
+    using DataStructures, Interpolations, LinearAlgebra, SparseArrays, NetCDF, NCDatasets, Statistics, DelimitedFiles, DSP, Optim, ArgParse, Printf, TOML
 
     # Define a function to search a given path for all files containing the given key
     searchdir(path,key) = filter(x->occursin(key,x), readdir(path))
@@ -19,14 +19,14 @@ module JuliaMet
     export newtoncotes, trapz2d, trapz3d
     export nansum, nanmean, nanvar, nanstd, nanmin, nanmax, nanextrema, nanfindmax,
            nanargmax, nanfindmin, nanargmin
-    export read_ncvars
+    export read_ncvars, ncdataread
     export closest_ind, grid2d, grid3d, xy2rp, regrid_xy2rp, regrid_xyz2rpz,
            regrid_pol2cart, unstagger, interplevel, curv2rect, curv2rect_wgts
     export obslocs_rtz
     export objsimplex, nanobjsimplex
     export get_bolton_thetae, get_sat_vap_prs, rslf, rsif
     export rankine, smrankine, modrankine, hermite, re87, cw87, wc04
-    export WRFCoordVars, WRFPostProcCoordVars, get_wrf_files, match_wrf_files
+    export WRFCoordVars, WRFPostProcCoordVars, get_wrf_files, get_wrf_simulation, match_wrf_files, get_wrf_time_specs, WRFTimeSpecs
 
     include("center_finding.jl")
     include("constants.jl")

@@ -66,3 +66,10 @@ function read_ncvars(ncfile::AbstractString,varnames::AbstractArray;
         return collect(values(vardata))
     end
 end
+
+function ncdataread(filepath::String, varname::String)
+    ds = NCDataset(filepath)
+    ovar = ds[varname] |> Array
+    close(ds)
+    return ovar
+end
